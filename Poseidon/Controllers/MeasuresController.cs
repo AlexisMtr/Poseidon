@@ -1,13 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
+﻿using AlexisMtrTools.DateTime;
+using Microsoft.AspNetCore.Mvc;
 using Poseidon.APIModels;
 using Poseidon.Models;
 using Poseidon.Repositories;
 using Poseidon.Services;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Poseidon.Controllers
 {
@@ -24,7 +21,24 @@ namespace Poseidon.Controllers
         [HttpPost]
         public IActionResult Post([FromForm] PoolMeasuresApi measures)
         {
-            return Ok();
+            IRepository<Measure> repository = new MongoDbMeasuresRepository(this.Service);
+
+            try
+            {
+                repository.Add(measures.Temperature);
+                repository.Add(measures.Ph);
+                repository.Add(measures.Level);
+            }
+            catch(Exception e)
+            {
+                return StatusCode(500, e.Message);
+            }
+
+            return Ok(new
+            {
+                Message = "Added",
+                Timestamp = DateTime.Now.ToTimestamp()
+            });
         }
     }
 }

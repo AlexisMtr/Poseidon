@@ -13,8 +13,8 @@ namespace Poseidon.Services
 
         public MongoDbService()
         {
-            this.Client = new MongoClient("");
-            this.Database = this.Client.GetDatabase("") as MongoDatabaseBase;
+            this.Client = new MongoClient("mongodb://127.0.0.1:27017");
+            this.Database = this.Client.GetDatabase("poseidon") as MongoDatabaseBase;
         }
     }
 }

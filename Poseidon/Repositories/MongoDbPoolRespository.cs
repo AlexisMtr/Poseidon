@@ -1,40 +1,46 @@
-﻿using Poseidon.Models;
-using System;
-using System.Collections.Generic;
+﻿using MongoDB.Driver;
+using Poseidon.Models;
+using Poseidon.Services;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Poseidon.Repositories
 {
     public class MongoDbPoolRespository : IRepository<Pool>
     {
-        public MongoDbPoolRespository()
+        private MongoDbService DbService { get; set; }
+        private IMongoCollection<Pool> PoolsCollection { get; set; }
+
+        public MongoDbPoolRespository(MongoDbService service)
         {
+            this.DbService = service;
+            this.PoolsCollection = this.DbService.Database.GetCollection<Pool>("pools");
         }
 
         public void Add(Pool model)
         {
-            throw new NotImplementedException();
+            this.PoolsCollection.InsertOne(model);
         }
 
         public void Delete(Pool model)
         {
-            throw new NotImplementedException();
+            this.PoolsCollection.DeleteOne(Builders<Pool>.Filter.Eq(p => p.Id, model.Id));
         }
 
         public IQueryable<Pool> Get()
         {
-            throw new NotImplementedException();
+            return this.PoolsCollection.AsQueryable();
         }
 
         public Pool GetById(string id)
         {
-            throw new NotImplementedException();
+            return this.PoolsCollection.AsQueryable()
+                .FirstOrDefault(p => p.Id.Equals(id));
         }
 
         public void Update(string id, Pool model)
         {
-            throw new NotImplementedException();
+            UpdateDefinition<Pool> update = Builders<Pool>.Update.Set(p => p, model);
+            this.PoolsCollection.UpdateOne(Builders<Pool>.Filter.Eq(p => p.Id, id), update);
         }
     }
 }

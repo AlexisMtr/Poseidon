@@ -39,6 +39,8 @@ namespace Poseidon
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
+            app.UseDeveloperExceptionPage();
+
             app.UseMvc();
         }
     }

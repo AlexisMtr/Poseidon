@@ -4,20 +4,19 @@ using Poseidon.Services;
 using System;
 using System.Linq;
 using AlexisMtrTools.DateTime;
+using System.Collections.Generic;
 
 namespace Poseidon.Repositories
 {
     public class MongoDbAlarmsRespository : IRepository<Alarm>
     {
         private MongoDbService DbService { get; set; }
-        private IMongoCollection<Alarm> AlarmsCollection { get; set; }
         private IMongoCollection<Pool> PoolsCollection { get; set; }
 
         public MongoDbAlarmsRespository(MongoDbService service)
         {
             this.DbService = service;
-            this.AlarmsCollection = this.DbService.Database.GetCollection<Alarm>("alarms");
-            this.PoolsCollection = this.DbService.Database.GetCollection<Pool>("pool");
+            this.PoolsCollection = this.DbService.Database.GetCollection<Pool>("pools");
         }
         
         public IQueryable<Alarm> Get()
@@ -28,8 +27,7 @@ namespace Poseidon.Repositories
         public IQueryable<Alarm> Get(AlarmState state)
         {
             return this.PoolsCollection.AsQueryable()
-                      .Select(p => p.Alarms)
-                      .SelectMany(a => a)
+                      .SelectMany(p => p.Alarms)
                       .Where(a => this.MatchState(a, state));
         }
 
@@ -41,17 +39,14 @@ namespace Poseidon.Repositories
 
         public void Delete(Alarm model)
         {
-            (string PoolId, int AlarmIndex) = this.GetPoolIdAndAlarmIndex(model.Id);
-
-            UpdateDefinition<Pool> update = Builders<Pool>.Update.Unset(p => p.Alarms.ToList()[AlarmIndex]);
-            this.PoolsCollection.UpdateOne(Builders<Pool>.Filter.Eq(p => p.Id, PoolId), update);
+            UpdateDefinition<Pool> update = Builders<Pool>.Update.Pull(p => p.Alarms, model);
+            this.PoolsCollection.UpdateOne(Builders<Pool>.Filter.Eq(p => p.Id, model.PoolId), update);
         }
 
         public Alarm GetById(string id)
         {
             return this.PoolsCollection.AsQueryable()
-                .Select(p => p.Alarms)
-                .SelectMany(a => a)
+                .SelectMany(p => p.Alarms)
                 .FirstOrDefault(a => a.Id.Equals(id));
         }
 
@@ -72,13 +67,14 @@ namespace Poseidon.Repositories
             this.PoolsCollection.UpdateOne(Builders<Pool>.Filter.Eq(p => p.Id, PoolId), update);
         }
 
-        public IQueryable<Alarm> GetByPoolId(string poolId, AlarmState filter)
+        public IEnumerable<Alarm> GetByPoolId(string poolId, AlarmState filter)
         {
-            return this.PoolsCollection.AsQueryable()
+            List<Alarm> alarms = this.PoolsCollection.AsQueryable()
                 .Where(p => p.Id.Equals(poolId))
-                .Select(p => p.Alarms)
-                .SelectMany(a => a)
-                .Where(a => this.MatchState(a, filter) && a.PoolId.Equals(poolId));
+                .SelectMany(p => p.Alarms)
+                .ToList();
+
+            return alarms.Where(a => this.MatchState(a, filter));
         }
 
         private bool MatchState(Alarm item, AlarmState filter)

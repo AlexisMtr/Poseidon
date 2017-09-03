@@ -7,7 +7,6 @@ namespace Poseidon.Models
 {
     public enum MeasureType
     {
-        None,
         Temperature,
         Ph,
         Level,

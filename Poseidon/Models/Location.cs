@@ -1,13 +1,17 @@
-﻿using System;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Poseidon.Models
 {
+    [BsonIgnoreExtraElements]
     public class Location
     {
-        public long Latitude { get; set; }
-        public long Lontitude { get; set; }
+        [BsonElement]
+        public double Latitude { get; set; }
+        [BsonElement]
+        public double Longitude { get; set; }
     }
 }
