@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Poseidon.Models
 {
@@ -9,7 +6,9 @@ namespace Poseidon.Models
     {
         public string Id { get; set; }
         public string Name { get; set; }
-        public IEnumerable<Measure> Measures { get; set; }
+        public IEnumerable<string> UsersId { get; set; }
         public Location Location { get; set; }
+        public IEnumerable<Measure> Measures { get; set; }
+        public IEnumerable<Alarm> Alarms { get; set; }
     }
 }

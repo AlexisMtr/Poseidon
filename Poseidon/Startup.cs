@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Poseidon.Services;
 
 namespace Poseidon
 {
@@ -28,6 +29,7 @@ namespace Poseidon
         public void ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
+            services.AddScoped<MongoDbService>();
             services.AddMvc();
         }
 

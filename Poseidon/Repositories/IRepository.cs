@@ -10,7 +10,7 @@ namespace Poseidon.Repositories
         IQueryable<T> Get();
         T GetById(string id);
         void Add(T model);
-        void Update(T model);
+        void Update(string id, T model);
         void Delete(T model);
     }
 }

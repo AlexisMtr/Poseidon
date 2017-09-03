@@ -32,7 +32,7 @@ namespace Poseidon.Repositories
             throw new NotImplementedException();
         }
 
-        public void Update(User model)
+        public void Update(string id, User model)
         {
             throw new NotImplementedException();
         }
