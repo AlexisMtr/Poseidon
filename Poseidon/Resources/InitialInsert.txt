@@ -27,7 +27,7 @@ db.pools.insert(
 				"Timestamp": 1504462596,
 				"Description": "Niveau de batterie en dessous des 30%",
 				"Ack": false,
-				"AcknowledgmentTimestamp": 0,
+				"AcknowledgmentTimestamp": null,
 				"AlarmType": 0
 			},
 			{
@@ -36,7 +36,7 @@ db.pools.insert(
 				"Timestamp": 1504462750,
 				"Description": "ph trop elevé",
 				"Ack": false,
-				"AcknowledgmentTimestamp": 0,
+				"AcknowledgmentTimestamp": null,
 				"AlarmType": 1
 			},
 			{
@@ -45,7 +45,7 @@ db.pools.insert(
 				"Timestamp": 1504462791,
 				"Description": "Eau trop chaude",
 				"Ack": false,
-				"AcknowledgmentTimestamp": 0,
+				"AcknowledgmentTimestamp": null,
 				"AlarmType": 2
 			}
 		],

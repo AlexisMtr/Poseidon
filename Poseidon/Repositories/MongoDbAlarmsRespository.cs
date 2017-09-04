@@ -52,19 +52,21 @@ namespace Poseidon.Repositories
 
         public void Update(string id, Alarm model)
         {
-            (string PoolId, int AlarmIndex) = this.GetPoolIdAndAlarmIndex(id);
+            Alarm alarm = this.GetById(id);
+            int alarmIndex = this.GetIndexOfAlarm(alarm.PoolId, alarm);
 
-            UpdateDefinition<Pool> update = Builders<Pool>.Update.Set(p => p.Alarms.ToList()[AlarmIndex], model);
-            this.PoolsCollection.UpdateOne(Builders<Pool>.Filter.Eq(p => p.Id,PoolId), update);
+            UpdateDefinition<Pool> update = Builders<Pool>.Update.Set($"Alarms.{alarmIndex}", model);
+            this.PoolsCollection.UpdateOne(Builders<Pool>.Filter.Eq(p => p.Id, alarm.PoolId), update);
         }
 
         public void Ack(string id)
         {
-            (string PoolId, int AlarmIndex) = this.GetPoolIdAndAlarmIndex(id);
+            Alarm alarm = this.GetById(id);
+            int alarmIndex = this.GetIndexOfAlarm(alarm.PoolId, alarm);
 
-            UpdateDefinition<Pool> update = Builders<Pool>.Update.Set(p => p.Alarms.ToList()[AlarmIndex].Ack, true)
-                .Set(p => p.Alarms.ToList()[AlarmIndex].AcknowledgmentTimestamp, DateTime.Now.ToTimestamp());
-            this.PoolsCollection.UpdateOne(Builders<Pool>.Filter.Eq(p => p.Id, PoolId), update);
+            UpdateDefinition<Pool> update = Builders<Pool>.Update.Set($"Alarms.{alarmIndex}.Ack", true)
+                .Set($"Alarms.{alarmIndex}.AcknowledgmentTimestamp", DateTime.Now.ToTimestamp());
+            this.PoolsCollection.UpdateOne(Builders<Pool>.Filter.Eq(p => p.Id, alarm.PoolId), update);
         }
 
         public IEnumerable<Alarm> GetByPoolId(string poolId, AlarmState filter)
@@ -84,16 +86,12 @@ namespace Poseidon.Repositories
                 (filter.Equals(AlarmState.Pending) && !item.Ack);
         }
 
-        private (string PoolId, int AlarmIndex) GetPoolIdAndAlarmIndex(string alarmId)
+        private int GetIndexOfAlarm(string poolId, Alarm alarm)
         {
             Pool pool = this.PoolsCollection.AsQueryable()
-                .FirstOrDefault(p => p.Alarms.Select(a => a.Id).Contains(alarmId));
+                .FirstOrDefault(p => p.Id.Equals(poolId));
 
-            Alarm alarm = this.PoolsCollection.AsQueryable()
-                .FirstOrDefault(p => p.Alarms.Select(a => a.Id).Contains(alarmId))
-                .Alarms.FirstOrDefault(a => a.Id.Equals(alarmId));
-
-            return (pool.Id, pool.Alarms.ToList().IndexOf(alarm));
+            return pool.Alarms.ToList().IndexOf(alarm);
         }
     }
 }

@@ -3,6 +3,7 @@
 namespace Poseidon.Models
 {
     [BsonIgnoreExtraElements]
+    [BsonNoId]
     public class Measure
     {
         [BsonElement]
@@ -17,5 +18,13 @@ namespace Poseidon.Models
         public object Value { get; set; }
         [BsonElement]
         public string Unit { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is Measure))
+                return false;
+
+            return (obj as Measure).Id.Equals(this.Id) && (obj as Measure).PoolId.Equals(this.PoolId);
+        }
     }
 }
