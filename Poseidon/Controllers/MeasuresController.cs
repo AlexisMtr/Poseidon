@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Poseidon.APIModels;
 using Poseidon.Models;
 using Poseidon.Repositories;
-using Poseidon.Services;
 using System;
 
 namespace Poseidon.Controllers
@@ -11,23 +10,21 @@ namespace Poseidon.Controllers
     [Route("api/[controller]")]
     public class MeasuresController : Controller
     {
-        private MongoDbService Service { get; set; }
+        private readonly IRepository<Measure> Repository;
 
-        protected MeasuresController(MongoDbService service)
+        public MeasuresController(IRepository<Measure> repository)
         {
-            this.Service = service;
+            this.Repository = repository;
         }
 
         [HttpPost]
-        public IActionResult Post([FromForm] PoolMeasuresApi measures)
+        public IActionResult Post([FromBody] PoolMeasuresApi measures)
         {
-            IRepository<Measure> repository = new MongoDbMeasuresRepository(this.Service);
-
             try
             {
-                repository.Add(measures.Temperature);
-                repository.Add(measures.Ph);
-                repository.Add(measures.Level);
+                this.Repository.Add(measures.Temperature);
+                this.Repository.Add(measures.Ph);
+                this.Repository.Add(measures.Level);
             }
             catch(Exception e)
             {

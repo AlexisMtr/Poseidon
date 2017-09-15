@@ -2,7 +2,6 @@
 using Poseidon.APIModels;
 using Poseidon.Models;
 using Poseidon.Repositories;
-using Poseidon.Services;
 using System;
 using AlexisMtrTools.DateTime;
 
@@ -11,20 +10,19 @@ namespace Poseidon.Controllers
     [Route("api/[controller]")]
     public class AlarmsController : Controller
     {
-        private MongoDbService Service { get; set; }
+        private readonly IRepository<Alarm> Repository;
 
-        public AlarmsController(MongoDbService service)
+        public AlarmsController(IRepository<Alarm> repository)
         {
-            this.Service = service;
+            this.Repository = repository;
         }
 
 
         [HttpPut("{id}/ack")]
         public IActionResult Ack([FromRoute] string id)
         {
-            IRepository<Alarm> repository = new MongoDbAlarmsRespository(this.Service);
-            (repository as MongoDbAlarmsRespository).Ack(id);
-            Alarm alarm = repository.GetById(id);
+            (this.Repository as MongoDbAlarmsRepository).Ack(id);
+            Alarm alarm = this.Repository.GetById(id);
 
             return Ok(new PoolAlarmAcknowledgmentApi
             {
@@ -38,8 +36,6 @@ namespace Poseidon.Controllers
         [HttpPost]
         public IActionResult Post([FromBody] AlarmApi alarm)
         {
-            IRepository<Alarm> repository = new MongoDbAlarmsRespository(this.Service);
-
             Alarm dbAlarm = new Alarm
             {
                 Id = "A" + DateTime.Now.ToTimestamp(),
@@ -49,7 +45,7 @@ namespace Poseidon.Controllers
                 AlarmType = alarm.AlarmType
             };
 
-            repository.Add(dbAlarm);
+            this.Repository.Add(dbAlarm);
 
             return Ok(new
             {

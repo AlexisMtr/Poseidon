@@ -1,19 +1,19 @@
 ﻿using MongoDB.Driver;
+using Poseidon.Configuration;
 using Poseidon.Models;
-using Poseidon.Services;
 using System.Linq;
 
 namespace Poseidon.Repositories
 {
     public class MongoDbPoolRespository : IRepository<Pool>
     {
-        private MongoDbService DbService { get; set; }
-        private IMongoCollection<Pool> PoolsCollection { get; set; }
+        private readonly MongoDbContext Context;
+        private readonly IMongoCollection<Pool> PoolsCollection;
 
-        public MongoDbPoolRespository(MongoDbService service)
+        public MongoDbPoolRespository(MongoDbContext context)
         {
-            this.DbService = service;
-            this.PoolsCollection = this.DbService.Database.GetCollection<Pool>("pools");
+            this.Context = context;
+            this.PoolsCollection = this.Context.Database.GetCollection<Pool>("pools");
         }
 
         public void Add(Pool model)

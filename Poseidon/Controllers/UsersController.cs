@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AlexisMtrTools.DateTime;
+using Microsoft.AspNetCore.Mvc;
 using Poseidon.APIModels;
 using Poseidon.Models;
 using Poseidon.Repositories;
-using Poseidon.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,18 +12,17 @@ namespace Poseidon.Controllers
     [Route("api/[controller]")]
     public class UsersController : Controller
     {
-        private MongoDbService Service { get; set; }
+        private readonly IRepository<User> Repository;
 
-        protected UsersController(MongoDbService service)
+        public UsersController(IRepository<User> repository)
         {
-            this.Service = service;
+            this.Repository = repository;
         }
 
         [HttpGet("{id}")]
         public IActionResult Get([FromRoute] string id)
         {
-            IRepository<User> repository = new MongoDbUsersRepository(this.Service);
-            User user = repository.GetById(id);
+            User user = this.Repository.GetById(id);
             return Ok(new UserApi
             {
                 Id = user.Id,
@@ -34,8 +34,7 @@ namespace Poseidon.Controllers
         [HttpGet("{id}/pools")]
         public IActionResult GetPools([FromRoute] string id)
         {
-            IRepository<User> repository = new MongoDbUsersRepository(this.Service);
-            IEnumerable<Pool> pools = (repository as MongoDbUsersRepository).GetPools(id);
+            IEnumerable<Pool> pools = (this.Repository as MongoDbUsersRepository).GetPools(id);
 
             List<PoolApi> poolsApi = new List<PoolApi>();
             foreach(Pool p in pools)
@@ -62,7 +61,23 @@ namespace Poseidon.Controllers
         [HttpPost]
         public IActionResult Post([FromBody] RegisterApi user)
         {
-            return Ok();
+            User udbUser = new User
+            {
+                Id = "U" + DateTime.Now.ToTimestamp(),
+                Login = user.Login,
+                LastName = user.LastName,
+                FirstName = user.FirstName,
+                Password = user.Password,
+                PoolsId = new List<string>()
+            };
+
+            this.Repository.Add(udbUser);
+
+            return Ok(new
+            {
+                Message = $"{user.FirstName} {user.LastName} created",
+                Login = user.Login
+            });
         }
     }
 }

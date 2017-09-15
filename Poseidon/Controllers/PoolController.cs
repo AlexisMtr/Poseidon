@@ -3,7 +3,6 @@ using MongoDB.Driver;
 using Poseidon.APIModels;
 using Poseidon.Models;
 using Poseidon.Repositories;
-using Poseidon.Services;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,18 +11,17 @@ namespace Poseidon.Controllers
     [Route("api/[controller]")]
     public class PoolController : Controller
     {
-        private MongoDbService Service { get; set; }
+        private readonly IRepository<Pool> Repository;
 
-        public PoolController(MongoDbService service)
+        public PoolController(IRepository<Pool> repository)
         {
-            this.Service = service;
+            this.Repository = repository;
         }
 
         [HttpGet("{id}")]
         public IActionResult Get([FromRoute] string id)
         {
-            IRepository<Pool> repository = new MongoDbPoolRespository(this.Service);
-            Pool pool = repository.GetById(id);
+            Pool pool = this.Repository.GetById(id);
 
             if (pool == null)
                 return NotFound();
@@ -41,8 +39,7 @@ namespace Poseidon.Controllers
         [HttpGet("{id}/alarms")]
         public IActionResult GetAlarms([FromRoute] string id, AlarmState filter = AlarmState.All)
         {
-            IRepository<Alarm> repository = new MongoDbAlarmsRespository(this.Service);
-            IEnumerable<Alarm> alarms = (repository as MongoDbAlarmsRespository).GetByPoolId(id, filter);
+            IEnumerable<Alarm> alarms = (this.Repository as MongoDbAlarmsRepository).GetByPoolId(id, filter);
 
             return Ok(alarms.ToList());
         }
@@ -50,8 +47,7 @@ namespace Poseidon.Controllers
         [HttpGet("{id}/measures/current")]
         public IActionResult GetCurrentMeasures([FromRoute] string id)
         {
-            IRepository<Measure> repository = new MongoDbMeasuresRepository(this.Service);
-            IQueryable<Measure> measures = (repository as MongoDbMeasuresRepository).GetByPoolId(id)
+            IQueryable<Measure> measures = (this.Repository as MongoDbMeasuresRepository).GetByPoolId(id)
                 .OrderByDescending(m => m.Timestamp);
 
             return Ok(new PoolMeasuresApi
@@ -78,7 +74,6 @@ namespace Poseidon.Controllers
         [HttpPost]
         public IActionResult Post([FromBody] PoolApi model)
         {
-            IRepository<Pool> repository = new MongoDbPoolRespository(this.Service);
             Pool pool = new Pool
             {
                 Id = model.PoolId,
@@ -89,7 +84,7 @@ namespace Poseidon.Controllers
                 UsersId = new List<string>()
             };
 
-            repository.Add(pool);
+            this.Repository.Add(pool);
 
             return Ok();
         }

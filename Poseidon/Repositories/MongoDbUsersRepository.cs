@@ -1,6 +1,6 @@
 ﻿using MongoDB.Driver;
+using Poseidon.Configuration;
 using Poseidon.Models;
-using Poseidon.Services;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,13 +8,15 @@ namespace Poseidon.Repositories
 {
     public class MongoDbUsersRepository : IRepository<User>
     {
-        private MongoDbService DbService { get; set; }
-        private IMongoCollection<User> UsersCollection { get; set; }
+        private readonly MongoDbContext Context;
+        private readonly IMongoCollection<User> UsersCollection;
+        private readonly IMongoCollection<Pool> PoolsCollection;
 
-        public MongoDbUsersRepository(MongoDbService service)
+        public MongoDbUsersRepository(MongoDbContext context)
         {
-            this.DbService = service;
-            this.UsersCollection = this.DbService.Database.GetCollection<User>("users");
+            this.Context = context;
+            this.UsersCollection = this.Context.Database.GetCollection<User>("users");
+            this.PoolsCollection = this.Context.Database.GetCollection<Pool>("pools");
         }
 
         public void Add(User model)
@@ -46,14 +48,13 @@ namespace Poseidon.Repositories
 
         public IEnumerable<Pool> GetPools(string id)
         {
-            IMongoCollection<Pool> pools = this.DbService.Database.GetCollection<Pool>("pools");
             IEnumerable<string> poolsId = this.UsersCollection.AsQueryable()
                 .FirstOrDefault(u => u.Id.Equals(id))
                 .PoolsId;
 
             FilterDefinition<Pool> filter = Builders<Pool>.Filter.In(p => p.Id, poolsId);
 
-            return pools.Find(filter).ToList();
+            return this.PoolsCollection.Find(filter).ToList();
         }
 
         public void RemovePoolReference(string poolId)

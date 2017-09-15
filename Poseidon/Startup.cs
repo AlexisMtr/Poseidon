@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Poseidon.Services;
+using Poseidon.Configuration;
+using Poseidon.Repositories;
+using Poseidon.Models;
 
 namespace Poseidon
 {
@@ -29,7 +27,14 @@ namespace Poseidon
         public void ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
-            services.AddScoped<MongoDbService>();
+            services.Configure<MongoDbSettings>(Configuration.GetSection("MongoDbSettings"));
+            services.AddScoped<MongoDbContext>();
+
+            services.AddScoped<IRepository<Alarm>, MongoDbAlarmsRepository>();
+            services.AddScoped<IRepository<Measure>, MongoDbMeasuresRepository>();
+            services.AddScoped<IRepository<Pool>, MongoDbPoolRespository>();
+            services.AddScoped<IRepository<User>, MongoDbUsersRepository>();
+
             services.AddMvc();
         }
 
