@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Poseidon.Configuration;
 using Poseidon.Repositories;
 using Poseidon.Models;
+using Poseidon.Services;
 
 namespace Poseidon
 {
@@ -34,6 +35,8 @@ namespace Poseidon
             services.AddScoped<IRepository<Measure>, MongoDbMeasuresRepository>();
             services.AddScoped<IRepository<Pool>, MongoDbPoolRespository>();
             services.AddScoped<IRepository<User>, MongoDbUsersRepository>();
+
+            services.AddScoped<UserPermissionService>();
 
             services.AddMvc();
         }
