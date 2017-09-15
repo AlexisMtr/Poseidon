@@ -4,6 +4,7 @@ using Poseidon.Models;
 using Poseidon.Repositories;
 using System;
 using AlexisMtrTools.DateTime;
+using System.Net;
 
 namespace Poseidon.Controllers
 {
@@ -19,6 +20,7 @@ namespace Poseidon.Controllers
 
 
         [HttpPut("{id}/ack")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolAlarmAcknowledgmentApi))]
         public IActionResult Ack([FromRoute] string id)
         {
             (this.Repository as MongoDbAlarmsRepository).Ack(id);
@@ -34,6 +36,7 @@ namespace Poseidon.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(OkResult))]
         public IActionResult Post([FromBody] AlarmApi alarm)
         {
             Alarm dbAlarm = new Alarm

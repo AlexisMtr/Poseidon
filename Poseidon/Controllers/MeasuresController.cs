@@ -4,6 +4,7 @@ using Poseidon.APIModels;
 using Poseidon.Models;
 using Poseidon.Repositories;
 using System;
+using System.Net;
 
 namespace Poseidon.Controllers
 {
@@ -18,6 +19,8 @@ namespace Poseidon.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(OkResult))]
+        [ProducesResponseType((int)HttpStatusCode.InternalServerError, Type = typeof(StatusCodeResult))]
         public IActionResult Post([FromBody] PoolMeasuresApi measures)
         {
             try

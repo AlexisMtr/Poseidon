@@ -5,6 +5,7 @@ using Poseidon.Models;
 using Poseidon.Repositories;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 
 namespace Poseidon.Controllers
 {
@@ -19,6 +20,7 @@ namespace Poseidon.Controllers
         }
 
         [HttpGet("{id}")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolApi))]
         public IActionResult Get([FromRoute] string id)
         {
             Pool pool = this.Repository.GetById(id);
@@ -37,6 +39,7 @@ namespace Poseidon.Controllers
         }
 
         [HttpGet("{id}/alarms")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(IEnumerable<Alarm>))]
         public IActionResult GetAlarms([FromRoute] string id, AlarmState filter = AlarmState.All)
         {
             IEnumerable<Alarm> alarms = (this.Repository as MongoDbAlarmsRepository).GetByPoolId(id, filter);
@@ -45,6 +48,7 @@ namespace Poseidon.Controllers
         }
 
         [HttpGet("{id}/measures/current")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolMeasuresApi))]
         public IActionResult GetCurrentMeasures([FromRoute] string id)
         {
             IQueryable<Measure> measures = (this.Repository as MongoDbMeasuresRepository).GetByPoolId(id)
@@ -60,18 +64,21 @@ namespace Poseidon.Controllers
         }
         
         [HttpGet("{id}/measures/forecast")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(NoContentResult))]
         public IActionResult GetForecastMeasures([FromRoute] string id)
         {
             return NoContent();
         }
 
         [HttpPut]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(OkResult))]
         public IActionResult Put([FromRoute] string id, [FromBody] PoolApi model)
         {
             return Ok();
         }
 
         [HttpPost]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(OkResult))]
         public IActionResult Post([FromBody] PoolApi model)
         {
             Pool pool = new Pool

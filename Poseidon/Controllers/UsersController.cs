@@ -6,6 +6,7 @@ using Poseidon.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 
 namespace Poseidon.Controllers
 {
@@ -20,6 +21,7 @@ namespace Poseidon.Controllers
         }
 
         [HttpGet("{id}")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(UserApi))]
         public IActionResult Get([FromRoute] string id)
         {
             User user = this.Repository.GetById(id);
@@ -32,6 +34,7 @@ namespace Poseidon.Controllers
         }
 
         [HttpGet("{id}/pools")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(List<PoolApi>))]
         public IActionResult GetPools([FromRoute] string id)
         {
             IEnumerable<Pool> pools = (this.Repository as MongoDbUsersRepository).GetPools(id);
@@ -53,12 +56,14 @@ namespace Poseidon.Controllers
         }
 
         [HttpPut("{id}")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(OkResult))]
         public IActionResult Put([FromRoute] string id, [FromBody] object user)
         {
             return Ok();
         }
 
         [HttpPost]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(OkResult))]
         public IActionResult Post([FromBody] RegisterApi user)
         {
             User udbUser = new User

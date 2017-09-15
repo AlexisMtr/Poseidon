@@ -38,6 +38,21 @@ namespace Poseidon
 
             services.AddScoped<UserPermissionService>();
 
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Swashbuckle.AspNetCore.Swagger.Info
+                {
+                    Title = "Poseidon",
+                    Version = "1.0.0",
+                    Description = "API for connected swimmingpool",
+                    Contact = new Swashbuckle.AspNetCore.Swagger.Contact
+                    {
+                        Name = "AlexisMtr",
+                        Url = "http://github.com/AlexisMtr"
+                    }
+                });
+            });
+
             services.AddMvc();
         }
 
@@ -48,6 +63,12 @@ namespace Poseidon
             loggerFactory.AddDebug();
 
             app.UseDeveloperExceptionPage();
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Poseidon V1");
+            });
 
             app.UseMvc();
         }
