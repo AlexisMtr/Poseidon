@@ -18,12 +18,17 @@ namespace Poseidon.Controllers
     [Authorize]
     public class PoolController : Controller
     {
-        private readonly IRepository<Pool> Repository;
+        private readonly IRepository<Pool> PoolRepository;
+        private readonly IRepository<Measure> MeasureRepository;
+        private readonly IRepository<Alarm> AlarmRepository;
         private readonly UserPermissionService PermissionService;
 
-        public PoolController(IRepository<Pool> repository, UserPermissionService userPermissionService)
+        public PoolController(IRepository<Pool> poolRepository, IRepository<Measure> measureRepository, 
+            IRepository<Alarm> alarmRepository, UserPermissionService userPermissionService)
         {
-            this.Repository = repository;
+            this.PoolRepository = poolRepository;
+            this.AlarmRepository = alarmRepository;
+            this.MeasureRepository = measureRepository;
             this.PermissionService = userPermissionService;
         }
 
@@ -35,7 +40,7 @@ namespace Poseidon.Controllers
             if (!this.PermissionService.IsAllowed(user.Id, id))
                 return Forbid();
 
-            Pool pool = this.Repository.GetById(id);
+            Pool pool = this.PoolRepository.GetById(id);
 
             if (pool == null)
                 return NotFound();
@@ -58,7 +63,7 @@ namespace Poseidon.Controllers
             if (!this.PermissionService.IsAllowed(user.Id, id))
                 return Forbid();
 
-            IEnumerable<Alarm> alarms = (this.Repository as MongoDbAlarmsRepository).GetByPoolId(id, filter);
+            IEnumerable<Alarm> alarms = (this.AlarmRepository as MongoDbAlarmsRepository).GetByPoolId(id, filter);
 
             return Ok(alarms.ToList());
         }
@@ -71,7 +76,7 @@ namespace Poseidon.Controllers
             if (!this.PermissionService.IsAllowed(user.Id, id))
                 return Forbid();
 
-            IQueryable<Measure> measures = (this.Repository as MongoDbMeasuresRepository).GetByPoolId(id)
+            IQueryable<Measure> measures = (this.MeasureRepository as MongoDbMeasuresRepository).GetByPoolId(id)
                 .OrderByDescending(m => m.Timestamp);
 
             return Ok(new MeasuresPayload
@@ -131,7 +136,7 @@ namespace Poseidon.Controllers
                 UsersId = new List<string>()
             };
 
-            this.Repository.Add(pool);
+            this.PoolRepository.Add(pool);
 
             return Ok(new ConfirmMessagePayload
             {
