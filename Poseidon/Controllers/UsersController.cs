@@ -1,4 +1,5 @@
 ﻿using AlexisMtrTools.DateTime;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Poseidon.APIModels;
 using Poseidon.Models;
@@ -11,6 +12,7 @@ using System.Net;
 namespace Poseidon.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     public class UsersController : Controller
     {
         private readonly IRepository<User> Repository;

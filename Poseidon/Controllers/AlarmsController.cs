@@ -5,17 +5,23 @@ using Poseidon.Repositories;
 using System;
 using AlexisMtrTools.DateTime;
 using System.Net;
+using Poseidon.Services;
+using Microsoft.AspNetCore.Authorization;
+using Poseidon.Helpers;
 
 namespace Poseidon.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     public class AlarmsController : Controller
     {
         private readonly IRepository<Alarm> Repository;
+        private readonly UserPermissionService PermissionService;
 
-        public AlarmsController(IRepository<Alarm> repository)
+        public AlarmsController(IRepository<Alarm> repository, UserPermissionService userPermissionService)
         {
             this.Repository = repository;
+            this.PermissionService = userPermissionService;
         }
 
 
@@ -23,6 +29,11 @@ namespace Poseidon.Controllers
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolAlarmAcknowledgmentApi))]
         public IActionResult Ack([FromRoute] string id)
         {
+            var user = UserDataClaim.GetUserDataClaim(HttpContext);
+            var poolId = (this.Repository as MongoDbAlarmsRepository).GetById(id).PoolId;
+            if (!this.PermissionService.IsAllowed(user.Id, poolId))
+                return Forbid();
+
             (this.Repository as MongoDbAlarmsRepository).Ack(id);
             Alarm alarm = this.Repository.GetById(id);
 

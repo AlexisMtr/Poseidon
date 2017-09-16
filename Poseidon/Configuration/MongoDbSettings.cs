@@ -8,6 +8,6 @@ namespace Poseidon.Configuration
     public class MongoDbSettings
     {
         public string DefaultConnectionString { get; set; }
-        public string DefaultCollectionName { get; set; }
+        public string DefaultDbName { get; set; }
     }
 }

@@ -7,6 +7,9 @@ using Poseidon.Configuration;
 using Poseidon.Repositories;
 using Poseidon.Models;
 using Poseidon.Services;
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Text;
 
 namespace Poseidon
 {
@@ -19,6 +22,7 @@ namespace Poseidon
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
+
             Configuration = builder.Build();
         }
 
@@ -29,8 +33,9 @@ namespace Poseidon
         {
             // Add framework services.
             services.Configure<MongoDbSettings>(Configuration.GetSection("MongoDbSettings"));
+            services.Configure<IssuerSigningKeySettings>(Configuration.GetSection("IssuerSigningKey"));
             services.AddScoped<MongoDbContext>();
-
+            
             services.AddScoped<IRepository<Alarm>, MongoDbAlarmsRepository>();
             services.AddScoped<IRepository<Measure>, MongoDbMeasuresRepository>();
             services.AddScoped<IRepository<Pool>, MongoDbPoolRespository>();
@@ -52,6 +57,7 @@ namespace Poseidon
                         Url = "http://github.com/AlexisMtr"
                     }
                 });
+                c.OperationFilter<AuthorizationHeaderParameterOperationFilter>();
             });
 
             services.AddMvc();
@@ -64,6 +70,17 @@ namespace Poseidon
             loggerFactory.AddDebug();
 
             app.UseDeveloperExceptionPage();
+
+            app.UseJwtBearerAuthentication( new JwtBearerOptions
+            {
+                TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateActor = false,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("IssuerSigningKey")["SigningKey"]))
+                }
+            });
 
             app.UseSwagger();
             app.UseSwaggerUI(c =>

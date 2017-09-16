@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using Poseidon.APIModels;
+using Poseidon.Helpers;
 using Poseidon.Models;
 using Poseidon.Repositories;
+using Poseidon.Services;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -10,19 +13,26 @@ using System.Net;
 namespace Poseidon.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     public class PoolController : Controller
     {
         private readonly IRepository<Pool> Repository;
+        private readonly UserPermissionService PermissionService;
 
-        public PoolController(IRepository<Pool> repository)
+        public PoolController(IRepository<Pool> repository, UserPermissionService userPermissionService)
         {
             this.Repository = repository;
+            this.PermissionService = userPermissionService;
         }
 
         [HttpGet("{id}")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolApi))]
         public IActionResult Get([FromRoute] string id)
         {
+            var user = UserDataClaim.GetUserDataClaim(HttpContext);
+            if (!this.PermissionService.IsAllowed(user.Id, id))
+                return Forbid();
+
             Pool pool = this.Repository.GetById(id);
 
             if (pool == null)
@@ -42,6 +52,10 @@ namespace Poseidon.Controllers
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(IEnumerable<Alarm>))]
         public IActionResult GetAlarms([FromRoute] string id, AlarmState filter = AlarmState.All)
         {
+            var user = UserDataClaim.GetUserDataClaim(HttpContext);
+            if (!this.PermissionService.IsAllowed(user.Id, id))
+                return Forbid();
+
             IEnumerable<Alarm> alarms = (this.Repository as MongoDbAlarmsRepository).GetByPoolId(id, filter);
 
             return Ok(alarms.ToList());
@@ -51,6 +65,10 @@ namespace Poseidon.Controllers
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolMeasuresApi))]
         public IActionResult GetCurrentMeasures([FromRoute] string id)
         {
+            var user = UserDataClaim.GetUserDataClaim(HttpContext);
+            if (!this.PermissionService.IsAllowed(user.Id, id))
+                return Forbid();
+
             IQueryable<Measure> measures = (this.Repository as MongoDbMeasuresRepository).GetByPoolId(id)
                 .OrderByDescending(m => m.Timestamp);
 
@@ -67,6 +85,10 @@ namespace Poseidon.Controllers
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(NoContentResult))]
         public IActionResult GetForecastMeasures([FromRoute] string id)
         {
+            var user = UserDataClaim.GetUserDataClaim(HttpContext);
+            if (!this.PermissionService.IsAllowed(user.Id, id))
+                return Forbid();
+
             return NoContent();
         }
 
@@ -74,6 +96,10 @@ namespace Poseidon.Controllers
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(OkResult))]
         public IActionResult Put([FromRoute] string id, [FromBody] PoolApi model)
         {
+            var user = UserDataClaim.GetUserDataClaim(HttpContext);
+            if (!this.PermissionService.IsAllowed(user.Id, id))
+                return Forbid();
+
             return Ok();
         }
 

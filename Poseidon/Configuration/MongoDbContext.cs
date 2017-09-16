@@ -14,7 +14,7 @@ namespace Poseidon.Configuration
             Settings = settings.Value;
 
             Client = new MongoClient(Settings.DefaultConnectionString);
-            Database = Client.GetDatabase(Settings.DefaultCollectionName);
+            Database = Client.GetDatabase(Settings.DefaultDbName);
         }
     }
 }

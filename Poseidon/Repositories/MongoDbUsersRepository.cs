@@ -19,6 +19,12 @@ namespace Poseidon.Repositories
             this.PoolsCollection = this.Context.Database.GetCollection<Pool>("pools");
         }
 
+        public User GetByLoginAndPassword(string login, string passsword)
+        {
+            return this.UsersCollection.AsQueryable()
+                .FirstOrDefault(u => u.Login.Equals(login) && u.Password.Equals(passsword));
+        }
+
         public void Add(User model)
         {
             this.UsersCollection.InsertOne(model);
