@@ -1,6 +1,6 @@
 ﻿using AlexisMtrTools.DateTime;
 using Microsoft.AspNetCore.Mvc;
-using Poseidon.APIModels;
+using Poseidon.Payload;
 using Poseidon.Models;
 using Poseidon.Repositories;
 using System;
@@ -19,9 +19,9 @@ namespace Poseidon.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(OkResult))]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(ConfirmMessagePayload))]
         [ProducesResponseType((int)HttpStatusCode.InternalServerError, Type = typeof(StatusCodeResult))]
-        public IActionResult Post([FromBody] PoolMeasuresApi measures)
+        public IActionResult Post([FromBody] MeasuresPayload measures)
         {
             try
             {
@@ -31,13 +31,21 @@ namespace Poseidon.Controllers
             }
             catch(Exception e)
             {
-                return StatusCode(500, e.Message);
+                return StatusCode(500, new ConfirmMessagePayload
+                {
+                    Code = HttpStatusCode.InternalServerError,
+                    Message = $"Error occured : {e.Message}",
+                    ObjectIdentifier = "",
+                    Timestamp = DateTime.UtcNow.ToTimestamp()
+                });
             }
 
-            return Ok(new
+            return Ok(new ConfirmMessagePayload
             {
-                Message = "Added",
-                Timestamp = DateTime.Now.ToTimestamp()
+                Code = HttpStatusCode.Created,
+                Message = "Measures added",
+                ObjectIdentifier = "",
+                Timestamp = DateTime.UtcNow.ToTimestamp()
             });
         }
     }

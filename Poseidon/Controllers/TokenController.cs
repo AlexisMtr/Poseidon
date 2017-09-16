@@ -1,13 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AlexisMtrTools.DateTime;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Poseidon.Configuration;
 using Poseidon.Helpers;
 using Poseidon.Models;
+using Poseidon.Payload;
 using Poseidon.Repositories;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 
@@ -25,9 +28,11 @@ namespace Poseidon.Controllers
         }
 
         [HttpGet]
-        public IActionResult Get(string login, string password)
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(GeneratedTokenPayload))]
+        [ProducesResponseType((int)HttpStatusCode.Unauthorized, Type = typeof(UnauthorizedResult))]
+        public IActionResult Get([FromBody] Credentials credentials)
         {
-            var user = (this.UserRepository as MongoDbUsersRepository).GetByLoginAndPassword(login, password);
+            var user = (this.UserRepository as MongoDbUsersRepository).GetByLoginAndPassword(credentials.Username, credentials.Password);
 
             if (user == null)
                 return Unauthorized();
@@ -51,9 +56,11 @@ namespace Poseidon.Controllers
 
             var token = new JwtSecurityToken(claims: claims, expires: DateTime.UtcNow.AddYears(1), signingCredentials: signingCredentials);
 
-            return Ok(new
+            return Ok(new GeneratedTokenPayload
             {
-                Token = new JwtSecurityTokenHandler().WriteToken(token)
+                Token = new JwtSecurityTokenHandler().WriteToken(token),
+                UserData = userData,
+                Timestamp = DateTime.UtcNow.ToTimestamp()
             });
         }
     }

@@ -1,8 +1,8 @@
 ﻿using AlexisMtrTools.DateTime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Poseidon.APIModels;
 using Poseidon.Models;
+using Poseidon.Payload;
 using Poseidon.Repositories;
 using System;
 using System.Collections.Generic;
@@ -23,11 +23,11 @@ namespace Poseidon.Controllers
         }
 
         [HttpGet("{id}")]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(UserApi))]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(UserPayload))]
         public IActionResult Get([FromRoute] string id)
         {
             User user = this.Repository.GetById(id);
-            return Ok(new UserApi
+            return Ok(new UserPayload
             {
                 Id = user.Id,
                 Name = $"{user.FirstName} {user.LastName}",
@@ -36,15 +36,15 @@ namespace Poseidon.Controllers
         }
 
         [HttpGet("{id}/pools")]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(List<PoolApi>))]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(List<PoolOverviewPayload>))]
         public IActionResult GetPools([FromRoute] string id)
         {
             IEnumerable<Pool> pools = (this.Repository as MongoDbUsersRepository).GetPools(id);
 
-            List<PoolApi> poolsApi = new List<PoolApi>();
+            List<PoolOverviewPayload> poolsApi = new List<PoolOverviewPayload>();
             foreach(Pool p in pools)
             {
-                poolsApi.Add(new PoolApi
+                poolsApi.Add(new PoolOverviewPayload
                 {
                     PoolId = p.Id,
                     Location = p.Location,
@@ -58,17 +58,23 @@ namespace Poseidon.Controllers
         }
 
         [HttpPut("{id}")]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(OkResult))]
-        public IActionResult Put([FromRoute] string id, [FromBody] object user)
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(ConfirmMessagePayload))]
+        public IActionResult Put([FromRoute] string id, [FromBody] UserPayload user)
         {
-            return Ok();
+            return Ok(new ConfirmMessagePayload
+            {
+                Code = HttpStatusCode.NotImplemented,
+                Message = "Endpoint not implemented",
+                ObjectIdentifier = "",
+                Timestamp = DateTime.UtcNow.ToTimestamp()
+            });
         }
 
         [HttpPost]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(OkResult))]
-        public IActionResult Post([FromBody] RegisterApi user)
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(ConfirmMessagePayload))]
+        public IActionResult Post([FromBody] RegisterPayload user)
         {
-            User udbUser = new User
+            User dbUser = new User
             {
                 Id = "U" + DateTime.Now.ToTimestamp(),
                 Login = user.Login,
@@ -78,12 +84,14 @@ namespace Poseidon.Controllers
                 PoolsId = new List<string>()
             };
 
-            this.Repository.Add(udbUser);
+            this.Repository.Add(dbUser);
 
-            return Ok(new
+            return Ok(new ConfirmMessagePayload
             {
-                Message = $"{user.FirstName} {user.LastName} created",
-                Login = user.Login
+                Code = HttpStatusCode.Created,
+                Message = $"{dbUser.LastName} {dbUser.FirstName} added",
+                ObjectIdentifier = dbUser.Id,
+                Timestamp = DateTime.UtcNow.ToTimestamp()
             });
         }
     }

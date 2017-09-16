@@ -8,7 +8,6 @@ using Poseidon.Repositories;
 using Poseidon.Models;
 using Poseidon.Services;
 using Microsoft.IdentityModel.Tokens;
-using System;
 using System.Text;
 
 namespace Poseidon

@@ -1,6 +1,6 @@
-﻿namespace Poseidon.APIModels
+﻿namespace Poseidon.Payload
 {
-    public class RegisterApi
+    public class RegisterPayload
     {
         public string LastName { get; set; }
         public string FirstName { get; set; }

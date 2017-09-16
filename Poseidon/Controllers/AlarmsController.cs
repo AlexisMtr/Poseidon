@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Poseidon.APIModels;
 using Poseidon.Models;
 using Poseidon.Repositories;
 using System;
@@ -8,6 +7,7 @@ using System.Net;
 using Poseidon.Services;
 using Microsoft.AspNetCore.Authorization;
 using Poseidon.Helpers;
+using Poseidon.Payload;
 
 namespace Poseidon.Controllers
 {
@@ -26,7 +26,7 @@ namespace Poseidon.Controllers
 
 
         [HttpPut("{id}/ack")]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolAlarmAcknowledgmentApi))]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(AlarmAcknowledgmentPayload))]
         public IActionResult Ack([FromRoute] string id)
         {
             var user = UserDataClaim.GetUserDataClaim(HttpContext);
@@ -37,7 +37,7 @@ namespace Poseidon.Controllers
             (this.Repository as MongoDbAlarmsRepository).Ack(id);
             Alarm alarm = this.Repository.GetById(id);
 
-            return Ok(new PoolAlarmAcknowledgmentApi
+            return Ok(new AlarmAcknowledgmentPayload
             {
                 PoolId = alarm.PoolId,
                 AlarmId = id,
@@ -47,24 +47,26 @@ namespace Poseidon.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(OkResult))]
-        public IActionResult Post([FromBody] AlarmApi alarm)
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(ConfirmMessagePayload))]
+        public IActionResult Post([FromBody] AlarmPayload alarm)
         {
             Alarm dbAlarm = new Alarm
             {
-                Id = "A" + DateTime.Now.ToTimestamp(),
+                Id = "A" + DateTime.UtcNow.ToTimestamp(),
                 Description = alarm.Description,
                 PoolId = alarm.PoolId,
-                Timestamp = DateTime.Now.ToTimestamp(),
+                Timestamp = DateTime.UtcNow.ToTimestamp(),
                 AlarmType = alarm.AlarmType
             };
 
             this.Repository.Add(dbAlarm);
 
-            return Ok(new
+            return Ok(new ConfirmMessagePayload
             {
-                Message = "Alarm created",
-                AlarmId = dbAlarm.Id
+                Message = "Alarm added",
+                Code = HttpStatusCode.OK,
+                ObjectIdentifier = dbAlarm.Id,
+                Timestamp = dbAlarm.Timestamp
             });
         }
     }

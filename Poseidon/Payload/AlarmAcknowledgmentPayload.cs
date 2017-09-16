@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace Poseidon.APIModels
+﻿namespace Poseidon.Payload
 {
-    public class PoolAlarmAcknowledgmentApi
+    public class AlarmAcknowledgmentPayload
     {
         public string PoolId { get; set; }
         public string AlarmId { get; set; }

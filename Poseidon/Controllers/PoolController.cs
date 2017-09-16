@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
-using Poseidon.APIModels;
+using Poseidon.Payload;
 using Poseidon.Helpers;
 using Poseidon.Models;
 using Poseidon.Repositories;
@@ -9,6 +9,8 @@ using Poseidon.Services;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System;
+using AlexisMtrTools.DateTime;
 
 namespace Poseidon.Controllers
 {
@@ -26,7 +28,7 @@ namespace Poseidon.Controllers
         }
 
         [HttpGet("{id}")]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolApi))]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolOverviewPayload))]
         public IActionResult Get([FromRoute] string id)
         {
             var user = UserDataClaim.GetUserDataClaim(HttpContext);
@@ -38,7 +40,7 @@ namespace Poseidon.Controllers
             if (pool == null)
                 return NotFound();
 
-            return Ok(new PoolApi
+            return Ok(new PoolOverviewPayload
             {
                 PoolId = pool.Id,
                 Name = pool.Name,
@@ -62,7 +64,7 @@ namespace Poseidon.Controllers
         }
 
         [HttpGet("{id}/measures/current")]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolMeasuresApi))]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(MeasuresPayload))]
         public IActionResult GetCurrentMeasures([FromRoute] string id)
         {
             var user = UserDataClaim.GetUserDataClaim(HttpContext);
@@ -72,7 +74,7 @@ namespace Poseidon.Controllers
             IQueryable<Measure> measures = (this.Repository as MongoDbMeasuresRepository).GetByPoolId(id)
                 .OrderByDescending(m => m.Timestamp);
 
-            return Ok(new PoolMeasuresApi
+            return Ok(new MeasuresPayload
             {
                 PoolId = id,
                 Temperature = measures.FirstOrDefault(m => m.MeasureType.Equals(MeasureType.Temperature)),
@@ -82,34 +84,46 @@ namespace Poseidon.Controllers
         }
         
         [HttpGet("{id}/measures/forecast")]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(NoContentResult))]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(ConfirmMessagePayload))]
         public IActionResult GetForecastMeasures([FromRoute] string id)
         {
             var user = UserDataClaim.GetUserDataClaim(HttpContext);
             if (!this.PermissionService.IsAllowed(user.Id, id))
                 return Forbid();
 
-            return NoContent();
+            return Ok(new ConfirmMessagePayload
+            {
+                Code = HttpStatusCode.NotImplemented,
+                Message = "Not implemented",
+                ObjectIdentifier = "",
+                Timestamp = DateTime.UtcNow.ToTimestamp()
+            });
         }
 
         [HttpPut]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(OkResult))]
-        public IActionResult Put([FromRoute] string id, [FromBody] PoolApi model)
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(ConfirmMessagePayload))]
+        public IActionResult Put([FromRoute] string id, [FromBody] PoolPayload model)
         {
             var user = UserDataClaim.GetUserDataClaim(HttpContext);
             if (!this.PermissionService.IsAllowed(user.Id, id))
                 return Forbid();
 
-            return Ok();
+            return Ok(new ConfirmMessagePayload
+            {
+                Code = HttpStatusCode.NotImplemented,
+                Message = "Not implemented",
+                ObjectIdentifier = "",
+                Timestamp = DateTime.UtcNow.ToTimestamp()
+            });
         }
 
         [HttpPost]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(OkResult))]
-        public IActionResult Post([FromBody] PoolApi model)
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(ConfirmMessagePayload))]
+        public IActionResult Post([FromBody] PoolPayload model)
         {
             Pool pool = new Pool
             {
-                Id = model.PoolId,
+                Id = "",
                 Name = model.Name,
                 Alarms = new List<Alarm>(),
                 Measures = new List<Measure>(),
@@ -119,7 +133,13 @@ namespace Poseidon.Controllers
 
             this.Repository.Add(pool);
 
-            return Ok();
+            return Ok(new ConfirmMessagePayload
+            {
+                Code = HttpStatusCode.Created,
+                Message = "Pool added",
+                ObjectIdentifier = pool.Id,
+                Timestamp = DateTime.UtcNow.ToTimestamp()
+            });
         }
     }
 }

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace Poseidon.APIModels
+namespace Poseidon.Payload
 {
-    public class UserApi
+    public class UserPayload
     {
         public string Id { get; set; }
         public string Name { get; set; }

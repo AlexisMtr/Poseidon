@@ -1,8 +1,8 @@
 ﻿using Poseidon.Models;
 
-namespace Poseidon.APIModels
+namespace Poseidon.Payload
 {
-    public class PoolApi
+    public class PoolOverviewPayload
     {
         public string PoolId { get; set; }
         public string Name { get; set; }
