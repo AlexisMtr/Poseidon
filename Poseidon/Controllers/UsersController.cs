@@ -15,9 +15,9 @@ namespace Poseidon.Controllers
     [Authorize]
     public class UsersController : Controller
     {
-        private readonly IRepository<User> Repository;
+        private readonly IUsersRepository<User> Repository;
 
-        public UsersController(IRepository<User> repository)
+        public UsersController(IUsersRepository<User> repository)
         {
             this.Repository = repository;
         }
@@ -39,7 +39,7 @@ namespace Poseidon.Controllers
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(List<PoolOverviewPayload>))]
         public IActionResult GetPools([FromRoute] string id)
         {
-            IEnumerable<Pool> pools = (this.Repository as MongoDbUsersRepository).GetPools(id);
+            IEnumerable<Pool> pools = this.Repository.GetPools(id);
 
             List<PoolOverviewPayload> poolsApi = new List<PoolOverviewPayload>();
             foreach(Pool p in pools)

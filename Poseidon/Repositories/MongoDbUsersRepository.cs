@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Poseidon.Repositories
 {
-    public class MongoDbUsersRepository : IRepository<User>
+    public class MongoDbUsersRepository : IUsersRepository<User>
     {
         private readonly MongoDbContext Context;
         private readonly IMongoCollection<User> UsersCollection;
@@ -48,8 +48,11 @@ namespace Poseidon.Repositories
 
         public void Update(string id, User model)
         {
-            UpdateDefinition<User> update = Builders<User>.Update.Set(u => u, model);
-            this.UsersCollection.UpdateOne(Builders<User>.Filter.Eq(u => u.Id, id), update);
+            var oldModel = this.GetById(id);
+            model.Id = oldModel.Id;
+            model.ObjectId = oldModel.ObjectId;
+
+            this.UsersCollection.ReplaceOne(Builders<User>.Filter.Eq(u => u.Id, id), model);
         }
 
         public IEnumerable<Pool> GetPools(string id)

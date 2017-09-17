@@ -35,10 +35,11 @@ namespace Poseidon
             services.Configure<IssuerSigningKeySettings>(Configuration.GetSection("IssuerSigningKey"));
             services.AddScoped<MongoDbContext>();
             
-            services.AddScoped<IRepository<Alarm>, MongoDbAlarmsRepository>();
-            services.AddScoped<IRepository<Measure>, MongoDbMeasuresRepository>();
-            services.AddScoped<IRepository<Pool>, MongoDbPoolRespository>();
-            services.AddScoped<IRepository<User>, MongoDbUsersRepository>();
+            services.AddScoped<IAlarmsRepository<Alarm>, MongoDbAlarmsRepository>();
+            services.AddScoped<IMeasuresRepository<Measure>, MongoDbMeasuresRepository>();
+            services.AddScoped<IPoolsRepository<Pool>, MongoDbPoolsRespository>();
+            services.AddScoped<IUsersRepository<User>, MongoDbUsersRepository>();
+            services.AddScoped<IPoolConfigurationsRepository<PoolConfiguration>, MongoDbPoolConfiguartionsRespository>();
 
             services.AddScoped<UserPermissionService>();
 

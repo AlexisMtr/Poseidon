@@ -1,12 +1,11 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 
 namespace Poseidon.Models
 {
     [BsonIgnoreExtraElements]
-    public class User
+    public class PoolConfiguration
     {
         [BsonId]
         [JsonIgnore]
@@ -15,16 +14,18 @@ namespace Poseidon.Models
         [BsonElement]
         public string Id { get; set; }
         [BsonElement]
-        public string LastName { get; set; }
+        public string PoolId { get; set; }
         [BsonElement]
-        public string FirstName { get; set; }
+        public double TemperatureMinValue { get; set; }
         [BsonElement]
-        public string Login { get; set; }
+        public double TemperatureMaxValue { get; set; }
         [BsonElement]
-        public string Password { get; set; }
+        public double PhMinValue { get; set; }
         [BsonElement]
-        public IEnumerable<string> PoolsId { get; set; }
+        public double PhMaxValue { get; set; }
         [BsonElement]
-        public string Role { get; set; }
+        public double WaterLevelMinValue { get; set; }
+        [BsonElement]
+        public double WaterLevelMaxValue { get; set; }
     }
 }

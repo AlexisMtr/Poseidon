@@ -8,7 +8,7 @@ using Poseidon.Configuration;
 
 namespace Poseidon.Repositories
 {
-    public class MongoDbAlarmsRepository : IRepository<Alarm>
+    public class MongoDbAlarmsRepository : IAlarmsRepository<Alarm>
     {
         private readonly MongoDbContext Context;
         private readonly IMongoCollection<Pool> PoolsCollection;

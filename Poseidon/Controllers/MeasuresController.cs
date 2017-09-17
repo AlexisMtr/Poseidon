@@ -11,9 +11,9 @@ namespace Poseidon.Controllers
     [Route("api/[controller]")]
     public class MeasuresController : Controller
     {
-        private readonly IRepository<Measure> Repository;
+        private readonly IMeasuresRepository<Measure> Repository;
 
-        public MeasuresController(IRepository<Measure> repository)
+        public MeasuresController(IMeasuresRepository<Measure> repository)
         {
             this.Repository = repository;
         }

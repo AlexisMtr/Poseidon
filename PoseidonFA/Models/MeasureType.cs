@@ -1,4 +1,4 @@
-﻿namespace Poseidon.Models
+﻿namespace PoseidonFA.Models
 {
     public enum MeasureType
     {

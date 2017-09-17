@@ -7,7 +7,21 @@ db.users.insert(
 		"LastName": "Mtr",
 		"Login": "AlexisMtr",
 		"Password": "P@ssw0rd",
+		"Role": "Admin",
 		"PoolsId": ["P1504462345"]
+	}
+)
+
+db.configurations.insert(
+	{
+		"Id": "C1504462345",
+		"PoolId": "P1504462345",
+		"TemperatureMinValue": 18.0,
+		"TemperatureMaxValue": 37.0,
+		"PhMinValue": 7.0,
+		"PhMaxValue": 7.0,
+		"WaterLevelMinValue": 55,
+		"WaterLevelMaxValue": 55
 	}
 )
 

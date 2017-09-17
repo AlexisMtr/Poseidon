@@ -5,12 +5,12 @@ using System.Linq;
 
 namespace Poseidon.Repositories
 {
-    public class MongoDbPoolRespository : IRepository<Pool>
+    public class MongoDbPoolsRespository : IPoolsRepository<Pool>
     {
         private readonly MongoDbContext Context;
         private readonly IMongoCollection<Pool> PoolsCollection;
 
-        public MongoDbPoolRespository(MongoDbContext context)
+        public MongoDbPoolsRespository(MongoDbContext context)
         {
             this.Context = context;
             this.PoolsCollection = this.Context.Database.GetCollection<Pool>("pools");
@@ -39,7 +39,9 @@ namespace Poseidon.Repositories
 
         public void Update(string id, Pool model)
         {
-            UpdateDefinition<Pool> update = Builders<Pool>.Update.Set(p => p, model);
+            UpdateDefinition<Pool> update = Builders<Pool>.Update.Set(p => p.Location, model.Location)
+                .Set(p => p.Name, model.Name)
+                .Set(p => p.UsersId, model.UsersId);
             this.PoolsCollection.UpdateOne(Builders<Pool>.Filter.Eq(p => p.Id, id), update);
         }
     }

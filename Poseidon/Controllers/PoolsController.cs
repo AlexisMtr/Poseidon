@@ -16,19 +16,22 @@ namespace Poseidon.Controllers
 {
     [Route("api/[controller]")]
     [Authorize]
-    public class PoolController : Controller
+    public class PoolsController : Controller
     {
-        private readonly IRepository<Pool> PoolRepository;
-        private readonly IRepository<Measure> MeasureRepository;
-        private readonly IRepository<Alarm> AlarmRepository;
+        private readonly IPoolsRepository<Pool> PoolRepository;
+        private readonly IMeasuresRepository<Measure> MeasureRepository;
+        private readonly IAlarmsRepository<Alarm> AlarmRepository;
+        private readonly IPoolConfigurationsRepository<PoolConfiguration> ConfigurationRepository;
         private readonly UserPermissionService PermissionService;
 
-        public PoolController(IRepository<Pool> poolRepository, IRepository<Measure> measureRepository, 
-            IRepository<Alarm> alarmRepository, UserPermissionService userPermissionService)
+        public PoolsController(IPoolsRepository<Pool> poolRepository, IMeasuresRepository<Measure> measureRepository,
+            IAlarmsRepository<Alarm> alarmRepository, IPoolConfigurationsRepository<PoolConfiguration> configurationRepository,
+            UserPermissionService userPermissionService)
         {
             this.PoolRepository = poolRepository;
             this.AlarmRepository = alarmRepository;
             this.MeasureRepository = measureRepository;
+            this.ConfigurationRepository = configurationRepository;
             this.PermissionService = userPermissionService;
         }
 
@@ -63,7 +66,7 @@ namespace Poseidon.Controllers
             if (!this.PermissionService.IsAllowed(user.Id, id))
                 return Forbid();
 
-            IEnumerable<Alarm> alarms = (this.AlarmRepository as MongoDbAlarmsRepository).GetByPoolId(id, filter);
+            IEnumerable<Alarm> alarms = this.AlarmRepository.GetByPoolId(id, filter);
 
             return Ok(alarms.ToList());
         }
@@ -76,15 +79,16 @@ namespace Poseidon.Controllers
             if (!this.PermissionService.IsAllowed(user.Id, id))
                 return Forbid();
 
-            IQueryable<Measure> measures = (this.MeasureRepository as MongoDbMeasuresRepository).GetByPoolId(id)
-                .OrderByDescending(m => m.Timestamp);
+            IQueryable<Measure> measures = this.MeasureRepository.GetByPoolId(id)
+                .OrderBy(m => m.Timestamp);
 
             return Ok(new MeasuresPayload
             {
                 PoolId = id,
-                Temperature = measures.FirstOrDefault(m => m.MeasureType.Equals(MeasureType.Temperature)),
-                Ph = measures.FirstOrDefault(m => m.MeasureType.Equals(MeasureType.Ph)),
-                Level = measures.FirstOrDefault(m => m.MeasureType.Equals(MeasureType.Level))
+                Temperature = measures.LastOrDefault(m => m.MeasureType.Equals(MeasureType.Temperature)),
+                Ph = measures.LastOrDefault(m => m.MeasureType.Equals(MeasureType.Ph)),
+                Level = measures.LastOrDefault(m => m.MeasureType.Equals(MeasureType.Level)),
+                Battery = measures.LastOrDefault(m => m.MeasureType.Equals(MeasureType.Battery))
             });
         }
         
@@ -105,6 +109,13 @@ namespace Poseidon.Controllers
             });
         }
 
+        [HttpGet("{id}/configuration")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolConfiguration))]
+        public IActionResult GetConfiguration([FromRoute] string id)
+        {
+            return Ok(this.ConfigurationRepository.GetByPoolId(id));
+        }
+
         [HttpPut]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(ConfirmMessagePayload))]
         public IActionResult Put([FromRoute] string id, [FromBody] PoolPayload model)
@@ -119,6 +130,29 @@ namespace Poseidon.Controllers
                 Message = "Not implemented",
                 ObjectIdentifier = "",
                 Timestamp = DateTime.UtcNow.ToTimestamp()
+            });
+        }
+
+        [HttpPut("{id}/configuration")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(ConfirmMessagePayload))]
+        public IActionResult PutConfiguration([FromRoute] string id, [FromBody] PoolConfiguration model)
+        {
+            var config = this.ConfigurationRepository.GetByPoolId(id);
+            if(config == null)
+            {
+                this.ConfigurationRepository.Add(model);
+            }
+            else
+            {
+                this.ConfigurationRepository.Update(id, model);
+            }
+
+            return Ok(new ConfirmMessagePayload
+            {
+                ObjectIdentifier = this.ConfigurationRepository.GetByPoolId(id).Id,
+                Code = HttpStatusCode.OK,
+                Timestamp = DateTime.UtcNow.ToTimestamp(),
+                Message = "Configuration updated"
             });
         }
 

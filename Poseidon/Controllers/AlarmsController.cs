@@ -15,10 +15,10 @@ namespace Poseidon.Controllers
     [Authorize]
     public class AlarmsController : Controller
     {
-        private readonly IRepository<Alarm> Repository;
+        private readonly IAlarmsRepository<Alarm> Repository;
         private readonly UserPermissionService PermissionService;
 
-        public AlarmsController(IRepository<Alarm> repository, UserPermissionService userPermissionService)
+        public AlarmsController(IAlarmsRepository<Alarm> repository, UserPermissionService userPermissionService)
         {
             this.Repository = repository;
             this.PermissionService = userPermissionService;
@@ -30,11 +30,11 @@ namespace Poseidon.Controllers
         public IActionResult Ack([FromRoute] string id)
         {
             var user = UserDataClaim.GetUserDataClaim(HttpContext);
-            var poolId = (this.Repository as MongoDbAlarmsRepository).GetById(id).PoolId;
+            var poolId = this.Repository.GetById(id).PoolId;
             if (!this.PermissionService.IsAllowed(user.Id, poolId))
                 return Forbid();
 
-            (this.Repository as MongoDbAlarmsRepository).Ack(id);
+            this.Repository.Ack(id);
             Alarm alarm = this.Repository.GetById(id);
 
             return Ok(new AlarmAcknowledgmentPayload

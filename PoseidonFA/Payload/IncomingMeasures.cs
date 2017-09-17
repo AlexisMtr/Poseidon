@@ -1,13 +1,13 @@
-﻿using Poseidon.Models;
+﻿using PoseidonFA.Models;
 
-namespace Poseidon.Payload
+namespace PoseidonFA.Payload
 {
-    public class MeasuresPayload
+    public class IncomingMeasures
     {
         public string PoolId { get; set; }
         public Measure Ph { get; set; }
-        public Measure Temperature { get; set; }
         public Measure Level { get; set; }
+        public Measure Temperature { get; set; }
         public Measure Battery { get; set; }
     }
 }

@@ -19,9 +19,9 @@ namespace Poseidon.Controllers
     [Route("api/[controller]")]
     public class TokenController : Controller
     {
-        private readonly IRepository<User> UserRepository;
+        private readonly IUsersRepository<User> UserRepository;
         private readonly IssuerSigningKeySettings Issuer;
-        public TokenController(IRepository<User> userRepository, IOptions<IssuerSigningKeySettings> signinKey)
+        public TokenController(IUsersRepository<User> userRepository, IOptions<IssuerSigningKeySettings> signinKey)
         {
             this.UserRepository = userRepository;
             this.Issuer = signinKey.Value;
@@ -30,9 +30,9 @@ namespace Poseidon.Controllers
         [HttpGet]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(GeneratedTokenPayload))]
         [ProducesResponseType((int)HttpStatusCode.Unauthorized, Type = typeof(UnauthorizedResult))]
-        public IActionResult Get([FromBody] Credentials credentials)
+        public IActionResult Get(Credentials credentials)
         {
-            var user = (this.UserRepository as MongoDbUsersRepository).GetByLoginAndPassword(credentials.Username, credentials.Password);
+            var user = this.UserRepository.GetByLoginAndPassword(credentials.Username, credentials.Password);
 
             if (user == null)
                 return Unauthorized();
