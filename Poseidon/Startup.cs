@@ -9,6 +9,7 @@ using Poseidon.Models;
 using Poseidon.Services;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace Poseidon
 {
@@ -20,6 +21,7 @@ namespace Poseidon
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
+                .AddUserSecrets<Startup>()
                 .AddEnvironmentVariables();
 
             Configuration = builder.Build();
@@ -42,6 +44,17 @@ namespace Poseidon
             services.AddScoped<IPoolConfigurationsRepository<PoolConfiguration>, MongoDbPoolConfiguartionsRespository>();
 
             services.AddScoped<UserPermissionService>();
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateActor = false,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("IssuerSigningKey")["SigningKey"]))
+                };
+            });
 
             services.AddSwaggerGen(c =>
             {
@@ -70,17 +83,7 @@ namespace Poseidon
             loggerFactory.AddDebug();
 
             app.UseDeveloperExceptionPage();
-
-            app.UseJwtBearerAuthentication( new JwtBearerOptions
-            {
-                TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ValidateActor = false,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("IssuerSigningKey")["SigningKey"]))
-                }
-            });
+            app.UseAuthentication();
 
             app.UseSwagger();
             app.UseSwaggerUI(c =>
