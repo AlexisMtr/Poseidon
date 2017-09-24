@@ -28,6 +28,7 @@ namespace Poseidon.Controllers
                 this.Repository.Add(measures.Temperature);
                 this.Repository.Add(measures.Ph);
                 this.Repository.Add(measures.Level);
+                this.Repository.Add(measures.Battery);
             }
             catch(Exception e)
             {

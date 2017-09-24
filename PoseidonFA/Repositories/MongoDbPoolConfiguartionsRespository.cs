@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace PoseidonFA.Repositories
 {
-    public class MongoDbPoolConfiguartionsRespository : IRepository<PoolConfiguration>
+    public class MongoDbPoolConfiguartionsRespository : IConfigurationRepository<PoolConfiguration>
     {
         private readonly MongoDbContext Context;
         private readonly IMongoCollection<PoolConfiguration> ConfigurationsCollection;
