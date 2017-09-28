@@ -11,6 +11,8 @@ using Autofac;
 using PoseidonFA.Configuration;
 using PoseidonFA.Repositories;
 using PoseidonFA.Models;
+using PoseidonFA.Services;
+using System;
 
 namespace PoseidonFA
 {
@@ -21,16 +23,24 @@ namespace PoseidonFA
         private static IContainer BuildDIContainer()
         {
             var builder = new ContainerBuilder();
-            builder.RegisterType<MongoDbContext>();
-            builder.RegisterType<MongoDbAlarmsRepository>().As<IRepository<Alarm>>();
-            builder.RegisterType<MongoDbMeasuresRepository>().As<IRepository<Measure>>();
-            builder.RegisterType<MongoDbPoolConfiguartionsRespository>().As<IConfigurationRepository<PoolConfiguration>>();
 
             var settings = new PoseidonSettings
             {
                 BatteryLevelAlarm = int.Parse(ConfigurationManager.AppSettings["BatteryLevelAlarm"])
             };
-            builder.RegisterInstance(settings);
+            var dbContext = new MongoDbContext(ConfigurationManager.AppSettings["DefaultConnectionString"],
+                ConfigurationManager.AppSettings["DefaultDbName"]);
+
+            builder.RegisterInstance(settings).SingleInstance();
+
+            builder.Register(o => o.InjectProperties(dbContext)).InstancePerLifetimeScope();
+
+            builder.RegisterType<MongoDbAlarmsRepository>().As<IRepository<Alarm>>().InstancePerLifetimeScope();
+            builder.RegisterType<MongoDbMeasuresRepository>().As<IRepository<Measure>>().InstancePerLifetimeScope();
+            builder.RegisterType<MongoDbPoolConfiguartionsRespository>().As<IConfigurationRepository<PoolConfiguration>>().InstancePerLifetimeScope();
+
+            builder.RegisterType<ProcessDataService>().InstancePerLifetimeScope();
+
 
             return builder.Build();
         }
@@ -43,21 +53,27 @@ namespace PoseidonFA
 
             Container = BuildDIContainer();
 
-            // parse query parameter
-            string name = req.GetQueryNameValuePairs()
-                .FirstOrDefault(q => string.Compare(q.Key, "name", true) == 0)
-                .Value;
+            using (var scope = Container.BeginLifetimeScope())
+            {
+                var service = scope.Resolve<ProcessDataService>();
 
-            // Get request body
-            var payload = await req.Content.ReadAsAsync<string>();
-            var data = Newtonsoft.Json.JsonConvert.DeserializeObject<IncomingMeasures>(payload);
+                try
+                {
+                    string poolId = req.GetQueryNameValuePairs()
+                        .FirstOrDefault(q => string.Compare(q.Key, "poolid", true) == 0).Value;
+                    
+                    var payload = await req.Content.ReadAsAsync<IncomingMeasures>();
 
+                    service.Process(poolId, payload);
+                    return req.CreateErrorResponse(HttpStatusCode.OK, "");
+                }
+                catch(Exception e)
+                {
+                    log.Error("Error during processing", e);
+                    return req.CreateErrorResponse(HttpStatusCode.InternalServerError, e);
+                }
+            }
 
-            // Set name to query string or body data
-
-            return name == null
-                ? req.CreateResponse(HttpStatusCode.BadRequest, "Please pass a name on the query string or in the request body")
-                : req.CreateResponse(HttpStatusCode.OK, "Hello " + name);
         }
     }
 }

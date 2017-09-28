@@ -1,8 +1,9 @@
-﻿using MongoDB.Driver;
+﻿using Autofac.Core;
+using MongoDB.Driver;
 
 namespace PoseidonFA.Configuration
 {
-    public class MongoDbContext
+    public class MongoDbContext : Service
     {
         public readonly IMongoClient Client;
         public readonly IMongoDatabase Database;
@@ -12,5 +13,7 @@ namespace PoseidonFA.Configuration
             Client = new MongoClient(connectionString);
             Database = Client.GetDatabase(dbName);
         }
+
+        public override string Description => "";
     }
 }

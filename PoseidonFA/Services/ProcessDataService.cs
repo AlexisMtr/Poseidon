@@ -3,6 +3,7 @@ using PoseidonFA.Helpers;
 using PoseidonFA.Models;
 using PoseidonFA.Payload;
 using PoseidonFA.Repositories;
+using System;
 
 namespace PoseidonFA.Services
 {
@@ -25,9 +26,12 @@ namespace PoseidonFA.Services
 
         public void Process(string poolId, IncomingMeasures data)
         {
+            if (string.IsNullOrEmpty(poolId))
+                throw new ArgumentNullException($"Argument {nameof(poolId)} cannot be null");
+
             var configuration = this.ConfigurationRepository.GetByPoolId(poolId);
 
-            if(data.Ph.Value is double ph)
+            if(IsNumeric(data.Ph.Value, out double ph))
             {
                 if(!ph.IsBetween(configuration.PhMinValue, configuration.PhMaxValue))
                 {
@@ -51,7 +55,7 @@ namespace PoseidonFA.Services
                 });
             }
 
-            if(data.Level.Value is double level)
+            if(IsNumeric(data.Level.Value, out double level))
             {
                 if(!level.IsBetween(configuration.WaterLevelMinValue, configuration.WaterLevelMaxValue))
                 {
@@ -75,7 +79,7 @@ namespace PoseidonFA.Services
                 });
             }
 
-            if (data.Temperature.Value is double temperature)
+            if (IsNumeric(data.Temperature.Value, out double temperature))
             {
                 if (!temperature.IsBetween(configuration.TemperatureMinValue, configuration.TemperatureMaxValue))
                 {
@@ -99,7 +103,7 @@ namespace PoseidonFA.Services
                 });
             }
 
-            if (data.Battery.Value is int battery)
+            if (IsNumeric(data.Battery.Value, out double battery))
             {
                 if (battery.IsBetween(0, PoseidonSettings.BatteryLevelAlarm))
                 {
@@ -122,6 +126,28 @@ namespace PoseidonFA.Services
                     Unit = "%"
                 });
             }
+        }
+
+        private bool IsNumeric(object value, out double valueAsDouble)
+        {
+            if(value is double d)
+            {
+                valueAsDouble = d;
+                return true;
+            }
+            if(value is int i)
+            {
+                valueAsDouble = i;
+                return true;
+            }
+            if (value is long l)
+            {
+                valueAsDouble = l;
+                return true;
+            }
+
+            valueAsDouble = 0.00;
+            return false;
         }
     }
 }
