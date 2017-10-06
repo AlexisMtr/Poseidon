@@ -2,6 +2,7 @@
 using PoseidonFA.Models;
 using PoseidonFA.Configuration;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace PoseidonFA.Repositories
 {
@@ -9,11 +10,13 @@ namespace PoseidonFA.Repositories
     {
         private readonly MongoDbContext Context;
         private readonly IMongoCollection<PoolConfiguration> ConfigurationsCollection;
+        private readonly IMongoCollection<Pool> PoolsCollection;
 
         public MongoDbPoolConfiguartionsRespository(MongoDbContext context)
         {
             this.Context = context;
             this.ConfigurationsCollection = this.Context.Database.GetCollection<PoolConfiguration>("configurations");
+            this.PoolsCollection = this.Context.Database.GetCollection<Pool>("pools");
         }
 
         public void Add(PoolConfiguration model)
@@ -41,6 +44,14 @@ namespace PoseidonFA.Repositories
         {
             return this.ConfigurationsCollection.AsQueryable()
                 .FirstOrDefault(c => c.PoolId.Equals(id));
+        }
+
+        public IEnumerable<string> GetUsersByPoolId(string poolId)
+        {
+            return this.PoolsCollection.AsQueryable()
+                .Where(p => p.Id.Equals(poolId))
+                .SelectMany(p => p.UsersId)
+                .AsEnumerable();
         }
 
         public void Update(string id, PoolConfiguration model)

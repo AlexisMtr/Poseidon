@@ -18,5 +18,7 @@ namespace PoseidonFA.Models
         public IEnumerable<Measure> Measures { get; set; }
         [BsonElement]
         public IEnumerable<Alarm> Alarms { get; set; }
+        [BsonElement]
+        public IEnumerable<string> UsersId { get; set; }
     }
 }

@@ -13,6 +13,7 @@ using PoseidonFA.Repositories;
 using PoseidonFA.Models;
 using PoseidonFA.Services;
 using System;
+using Microsoft.AspNet.SignalR.Client;
 
 namespace PoseidonFA
 {
@@ -26,14 +27,19 @@ namespace PoseidonFA
 
             var settings = new PoseidonSettings
             {
-                BatteryLevelAlarm = int.Parse(ConfigurationManager.AppSettings["BatteryLevelAlarm"])
+                BatteryLevelAlarm = int.Parse(ConfigurationManager.AppSettings["BatteryLevelAlarm"]),
+                ServerUrl = ConfigurationManager.AppSettings["ServerUrl"],
+                SocketRoute = ConfigurationManager.AppSettings["SocketRoute"]
             };
+
             var dbContext = new MongoDbContext(ConfigurationManager.AppSettings["DefaultConnectionString"],
                 ConfigurationManager.AppSettings["DefaultDbName"]);
+            var connectionHub = new HubConnection(settings.ServerUrl);
 
             builder.RegisterInstance(settings).SingleInstance();
 
             builder.Register(o => o.InjectProperties(dbContext)).InstancePerLifetimeScope();
+            builder.Register(o => o.InjectProperties(new HubConnectionService(connectionHub))).InstancePerLifetimeScope();
 
             builder.RegisterType<MongoDbAlarmsRepository>().As<IRepository<Alarm>>().InstancePerLifetimeScope();
             builder.RegisterType<MongoDbMeasuresRepository>().As<IRepository<Measure>>().InstancePerLifetimeScope();

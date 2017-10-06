@@ -10,6 +10,8 @@ using Poseidon.Services;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Poseidon.Hubs;
+using Poseidon.Helpers;
 
 namespace Poseidon
 {
@@ -45,6 +47,8 @@ namespace Poseidon
 
             services.AddScoped<UserPermissionService>();
 
+            services.AddSingleton<IConnectionMapper<string>, ConnectionMapping<string>>();
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -73,6 +77,8 @@ namespace Poseidon
                 c.OperationFilter<AuthorizationHeaderParameterOperationFilter>();
             });
 
+            services.AddSignalR();
+
             services.AddMvc();
         }
 
@@ -91,6 +97,11 @@ namespace Poseidon
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Poseidon V1");
             });
 
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<AlarmsHub>("alarms");
+            });
+            
             app.UseMvc();
         }
     }

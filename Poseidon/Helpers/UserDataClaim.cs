@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 
@@ -18,7 +19,12 @@ namespace Poseidon.Helpers
 
         public static UserDataClaim GetUserDataClaim(HttpContext context)
         {
-            var userDataString = context.User.Claims.First(x => x.Type.Equals(ClaimTypes.UserData)).Value;
+            return GetUserDataClaim(context.User.Claims);
+        }
+
+        public static UserDataClaim GetUserDataClaim(IEnumerable<Claim> claims)
+        {
+            var userDataString = claims.First(x => x.Type.Equals(ClaimTypes.UserData)).Value;
             return JsonConvert.DeserializeObject<UserDataClaim>(userDataString);
         }
     }

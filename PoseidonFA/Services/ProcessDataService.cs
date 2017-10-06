@@ -4,6 +4,7 @@ using PoseidonFA.Models;
 using PoseidonFA.Payload;
 using PoseidonFA.Repositories;
 using System;
+using System.Collections.Generic;
 
 namespace PoseidonFA.Services
 {
@@ -12,16 +13,18 @@ namespace PoseidonFA.Services
         private readonly IRepository<Measure> MeasuresRepository;
         private readonly IRepository<Alarm> AlarmsRepository;
         private readonly IConfigurationRepository<PoolConfiguration> ConfigurationRepository;
+        private readonly HubConnectionService HubService;
         
         public readonly PoseidonSettings PoseidonSettings;
 
-        public ProcessDataService(IRepository<Measure> measureRepository, IRepository<Alarm> alarmRepository, 
-            IConfigurationRepository<PoolConfiguration> configurationRepository, PoseidonSettings poseidonSettings)
+        public ProcessDataService(IRepository<Measure> measureRepository, IRepository<Alarm> alarmRepository,
+            IConfigurationRepository<PoolConfiguration> configurationRepository, PoseidonSettings poseidonSettings, HubConnectionService hubService)
         {
             this.MeasuresRepository = measureRepository;
             this.AlarmsRepository = alarmRepository;
             this.ConfigurationRepository = configurationRepository;
             this.PoseidonSettings = poseidonSettings;
+            this.HubService = hubService;
         }
 
         public void Process(string poolId, IncomingMeasures data)
@@ -30,18 +33,24 @@ namespace PoseidonFA.Services
                 throw new ArgumentNullException($"Argument {nameof(poolId)} cannot be null");
 
             var configuration = this.ConfigurationRepository.GetByPoolId(poolId);
+            var usersId = this.ConfigurationRepository.GetUsersByPoolId(poolId) as List<string>;
+
+            var alarmsToSend = new List<Alarm>();
 
             if(IsNumeric(data.Ph.Value, out double ph))
             {
                 if(!ph.IsBetween(configuration.PhMinValue, configuration.PhMaxValue))
                 {
-                    this.AlarmsRepository.Add(new Alarm
+                    var alarm = new Alarm
                     {
                         PoolId = poolId,
                         Timestamp = data.Ph.Timestamp,
                         AlarmType = AlarmType.Ph,
                         Description = (ph > configuration.PhMaxValue ? "Solution Saline" : "Solution Acide") + $" (ph: {ph})"
-                    });
+                    };
+
+                    this.AlarmsRepository.Add(alarm);
+                    alarmsToSend.Add(alarm);
                 }
 
                 this.MeasuresRepository.Add(new Measure
@@ -59,13 +68,16 @@ namespace PoseidonFA.Services
             {
                 if(!level.IsBetween(configuration.WaterLevelMinValue, configuration.WaterLevelMaxValue))
                 {
-                    this.AlarmsRepository.Add(new Alarm
+                    var alarm = new Alarm
                     {
                         PoolId = poolId,
                         Timestamp = data.Level.Timestamp,
                         AlarmType = AlarmType.WaterLevel,
                         Description = level > configuration.WaterLevelMaxValue ? "Débordement" : "Niveau d'eau trop faible, arrêter le système de pompage"
-                    });
+                    };
+
+                    this.AlarmsRepository.Add(alarm);
+                    alarmsToSend.Add(alarm);
                 }
 
                 this.MeasuresRepository.Add(new Measure
@@ -83,13 +95,16 @@ namespace PoseidonFA.Services
             {
                 if (!temperature.IsBetween(configuration.TemperatureMinValue, configuration.TemperatureMaxValue))
                 {
-                    this.AlarmsRepository.Add(new Alarm
+                    var alarm = new Alarm
                     {
                         PoolId = poolId,
                         Timestamp = data.Temperature.Timestamp,
                         AlarmType = AlarmType.Temperature,
                         Description = temperature > configuration.TemperatureMaxValue ? "La température de l'eau a dépassée le seuil maximal" : "Température trop basse pour se baigner"
-                    });
+                    };
+
+                    this.AlarmsRepository.Add(alarm);
+                    alarmsToSend.Add(alarm);
                 }
 
                 this.MeasuresRepository.Add(new Measure
@@ -107,13 +122,16 @@ namespace PoseidonFA.Services
             {
                 if (battery.IsBetween(0, PoseidonSettings.BatteryLevelAlarm))
                 {
-                    this.AlarmsRepository.Add(new Alarm
+                    var alarm = new Alarm
                     {
                         PoolId = poolId,
                         Timestamp = data.Temperature.Timestamp,
                         AlarmType = AlarmType.BatteryLow,
                         Description = $"Niveau de batterie faible ({battery}%)"
-                    });
+                    };
+
+                    this.AlarmsRepository.Add(alarm);
+                    alarmsToSend.Add(alarm);
                 }
 
                 this.MeasuresRepository.Add(new Measure
@@ -125,6 +143,16 @@ namespace PoseidonFA.Services
                     Value = battery,
                     Unit = "%"
                 });
+            }
+
+            if(alarmsToSend.Count > 0 && usersId.Count > 0)
+            {
+                var proxy = this.HubService.Connection.CreateHubProxy("AlarmsHub");
+                this.HubService.Connection.Start();
+
+                proxy.Invoke("SendAlarm", usersId, alarmsToSend);
+
+                this.HubService.Connection.Stop();
             }
         }
 
