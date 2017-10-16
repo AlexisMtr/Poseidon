@@ -2,6 +2,8 @@
 using Poseidon.Configuration;
 using Poseidon.Models;
 using System.Linq;
+using System;
+using AlexisMtrTools.DateTime;
 
 namespace Poseidon.Repositories
 {
@@ -62,6 +64,12 @@ namespace Poseidon.Repositories
             return this.PoolsCollection.AsQueryable()
                 .Where(p => p.Id.Equals(poolId))
                 .SelectMany(p => p.Measures);
+        }
+
+        public IQueryable<Measure> GetByPoolIdBetween(string poolId, DateTime min, DateTime max)
+        {
+            return this.GetByPoolId(poolId)
+                .Where(m => m.Timestamp.ToDateTime().IsBetween(min, max));
         }
     }
 }

@@ -109,6 +109,42 @@ namespace Poseidon.Controllers
             });
         }
 
+        [HttpGet("{id}/measures")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(IEnumerable<Measure>))]
+        public IActionResult GetMeasuresBetweenDate([FromRoute] string id, [FromBody] DateTimeFilter dates)
+        {
+            var user = UserDataClaim.GetUserDataClaim(HttpContext);
+            if (!this.PermissionService.IsAllowed(user.Id, id))
+                return Forbid();
+
+            if (dates.MinDateTimestamp == default(long) || dates.MaxDateTimestamp == default(long))
+                return BadRequest();
+
+            IEnumerable<Measure> measures = this.MeasureRepository.GetByPoolIdBetween(id, dates.MinDateTimestamp.ToDateTime(), dates.MaxDateTimestamp.ToDateTime());
+
+            return Ok(measures.ToList());
+        }
+
+        [HttpGet("{id}/measures/{type}")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(IEnumerable<Measure>))]
+        public IActionResult GetMeasuresBetweenDate([FromRoute] string id, [FromRoute] string type, [FromBody] DateTimeFilter dates)
+        {
+            var user = UserDataClaim.GetUserDataClaim(HttpContext);
+            if (!this.PermissionService.IsAllowed(user.Id, id))
+                return Forbid();
+
+            if(!Enum.TryParse(type, out MeasureType enumValue))
+                return BadRequest();
+
+            if (dates.MinDateTimestamp == default(long) || dates.MaxDateTimestamp == default(long))
+                return BadRequest();
+
+            IEnumerable<Measure> measures = this.MeasureRepository.GetByPoolIdBetween(id, dates.MinDateTimestamp.ToDateTime(), dates.MaxDateTimestamp.ToDateTime())
+                .Where(m => m.MeasureType.Equals((int)enumValue));
+
+            return Ok(measures.ToList());
+        }
+
         [HttpGet("{id}/configuration")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolConfiguration))]
         public IActionResult GetConfiguration([FromRoute] string id)
