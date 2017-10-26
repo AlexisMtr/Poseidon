@@ -1,10 +1,12 @@
-﻿using PoseidonFA.Configuration;
+﻿using Microsoft.Azure.NotificationHubs;
+using PoseidonFA.Configuration;
 using PoseidonFA.Helpers;
 using PoseidonFA.Models;
 using PoseidonFA.Payload;
 using PoseidonFA.Repositories;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace PoseidonFA.Services
 {
@@ -13,18 +15,18 @@ namespace PoseidonFA.Services
         private readonly IRepository<Measure> MeasuresRepository;
         private readonly IRepository<Alarm> AlarmsRepository;
         private readonly IConfigurationRepository<PoolConfiguration> ConfigurationRepository;
-        private readonly HubConnectionService HubService;
+        private readonly INotificationHub NotificationHub;
         
         public readonly PoseidonSettings PoseidonSettings;
 
         public ProcessDataService(IRepository<Measure> measureRepository, IRepository<Alarm> alarmRepository,
-            IConfigurationRepository<PoolConfiguration> configurationRepository, PoseidonSettings poseidonSettings, HubConnectionService hubService)
+            IConfigurationRepository<PoolConfiguration> configurationRepository, PoseidonSettings poseidonSettings, INotificationHub hub)
         {
             this.MeasuresRepository = measureRepository;
             this.AlarmsRepository = alarmRepository;
             this.ConfigurationRepository = configurationRepository;
             this.PoseidonSettings = poseidonSettings;
-            this.HubService = hubService;
+            this.NotificationHub = hub;
         }
 
         public void Process(string poolId, IncomingMeasures data)
@@ -147,12 +149,7 @@ namespace PoseidonFA.Services
 
             if(alarmsToSend.Count > 0 && usersId.Count > 0)
             {
-                var proxy = this.HubService.Connection.CreateHubProxy("AlarmsHub");
-                this.HubService.Connection.Start();
-
-                proxy.Invoke("SendAlarm", usersId, alarmsToSend);
-
-                this.HubService.Connection.Stop();
+                this.NotificationHub.Send(alarmsToSend, usersId);
             }
         }
 
