@@ -1,12 +1,10 @@
-﻿using Microsoft.Azure.NotificationHubs;
-using PoseidonFA.Configuration;
+﻿using PoseidonFA.Configuration;
 using PoseidonFA.Helpers;
 using PoseidonFA.Models;
 using PoseidonFA.Payload;
 using PoseidonFA.Repositories;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace PoseidonFA.Services
 {
@@ -147,10 +145,10 @@ namespace PoseidonFA.Services
                 });
             }
 
-            if(alarmsToSend.Count > 0 && usersId.Count > 0)
-            {
-                this.NotificationHub.Send(alarmsToSend, usersId);
-            }
+            //if(alarmsToSend.Count > 0 && usersId.Count > 0)
+            //{
+            //    this.NotificationHub.Send(alarmsToSend, usersId);
+            //}
         }
 
         private bool IsNumeric(object value, out double valueAsDouble)

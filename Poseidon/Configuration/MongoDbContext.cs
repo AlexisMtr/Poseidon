@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using System.Security.Authentication;
 
 namespace Poseidon.Configuration
 {
@@ -13,7 +14,10 @@ namespace Poseidon.Configuration
         {
             Settings = settings.Value;
 
-            Client = new MongoClient(Settings.DefaultConnectionString);
+            MongoClientSettings clientSettings = MongoClientSettings.FromUrl(new MongoUrl(Settings.DefaultConnectionString));
+            clientSettings.SslSettings = new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
+
+            Client = new MongoClient(clientSettings);
             Database = Client.GetDatabase(Settings.DefaultDbName);
         }
     }

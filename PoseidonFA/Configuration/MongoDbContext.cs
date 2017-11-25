@@ -1,5 +1,6 @@
 ﻿using Autofac.Core;
 using MongoDB.Driver;
+using System.Security.Authentication;
 
 namespace PoseidonFA.Configuration
 {
@@ -10,7 +11,10 @@ namespace PoseidonFA.Configuration
 
         public MongoDbContext(string connectionString, string dbName)
         {
-            Client = new MongoClient(connectionString);
+            MongoClientSettings settings = MongoClientSettings.FromUrl(new MongoUrl(connectionString));
+            settings.SslSettings = new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
+
+            Client = new MongoClient(settings);
             Database = Client.GetDatabase(dbName);
         }
 
