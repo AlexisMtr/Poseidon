@@ -2,7 +2,7 @@
 
 namespace Poseidon.Repositories
 {
-    public interface IPoolsRepository<T> : IRepository<T> where T : Pool
+    public interface ITelemetryRepository : IRepository<Telemetry>
     {
     }
 }

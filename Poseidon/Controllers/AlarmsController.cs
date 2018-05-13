@@ -1,13 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Poseidon.Models;
-using Poseidon.Repositories;
-using System;
-using AlexisMtrTools.DateTime;
 using System.Net;
-using Poseidon.Services;
 using Microsoft.AspNetCore.Authorization;
-using Poseidon.Helpers;
-using Poseidon.Payload;
+using Poseidon.Services;
+using Poseidon.Models;
 
 namespace Poseidon.Controllers
 {
@@ -15,59 +10,19 @@ namespace Poseidon.Controllers
     [Authorize]
     public class AlarmsController : Controller
     {
-        private readonly IAlarmsRepository<Alarm> Repository;
-        private readonly UserPermissionService PermissionService;
+        private readonly AlarmService alarmService;
 
-        public AlarmsController(IAlarmsRepository<Alarm> repository, UserPermissionService userPermissionService)
+        public AlarmsController(AlarmService alarmService)
         {
-            this.Repository = repository;
-            this.PermissionService = userPermissionService;
+            this.alarmService = alarmService;
         }
-
 
         [HttpPut("{id}/ack")]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(AlarmAcknowledgmentPayload))]
-        public IActionResult Ack([FromRoute] string id)
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        public IActionResult Ack(int id)
         {
-            var user = UserDataClaim.GetUserDataClaim(HttpContext);
-            var poolId = this.Repository.GetById(id).PoolId;
-            if (!this.PermissionService.IsAllowed(user.Id, poolId))
-                return Forbid();
-
-            this.Repository.Ack(id);
-            Alarm alarm = this.Repository.GetById(id);
-
-            return Ok(new AlarmAcknowledgmentPayload
-            {
-                PoolId = alarm.PoolId,
-                AlarmId = id,
-                AlarmTimestamp = alarm.Timestamp,
-                AlarmAcknowledgmentTimestamp = DateTime.Now.ToTimestamp()
-            });
-        }
-
-        [HttpPost]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(ConfirmMessagePayload))]
-        public IActionResult Post([FromBody] AlarmPayload alarm)
-        {
-            Alarm dbAlarm = new Alarm
-            {
-                Id = "A" + DateTime.UtcNow.ToTimestamp(),
-                Description = alarm.Description,
-                PoolId = alarm.PoolId,
-                Timestamp = DateTime.UtcNow.ToTimestamp(),
-                AlarmType = alarm.AlarmType
-            };
-
-            this.Repository.Add(dbAlarm);
-
-            return Ok(new ConfirmMessagePayload
-            {
-                Message = "Alarm added",
-                Code = HttpStatusCode.OK,
-                ObjectIdentifier = dbAlarm.Id,
-                Timestamp = dbAlarm.Timestamp
-            });
+            Alarm alarm = alarmService.Ack(id);
+            return Ok(alarm);
         }
     }
 }

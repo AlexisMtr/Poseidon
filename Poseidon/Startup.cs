@@ -4,9 +4,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Poseidon.Configuration;
-using Poseidon.Repositories;
-using Poseidon.Models;
-using Poseidon.Services;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -39,13 +36,13 @@ namespace Poseidon
             services.Configure<IssuerSigningKeySettings>(Configuration.GetSection("IssuerSigningKey"));
             services.AddScoped<MongoDbContext>();
             
-            services.AddScoped<IAlarmsRepository<Alarm>, MongoDbAlarmsRepository>();
-            services.AddScoped<IMeasuresRepository<Measure>, MongoDbMeasuresRepository>();
-            services.AddScoped<IPoolsRepository<Pool>, MongoDbPoolsRespository>();
-            services.AddScoped<IUsersRepository<User>, MongoDbUsersRepository>();
-            services.AddScoped<IPoolConfigurationsRepository<PoolConfiguration>, MongoDbPoolConfiguartionsRespository>();
+            //services.AddScoped<IAlarmRepository<Alarm>, MongoDbAlarmsRepository>();
+            //services.AddScoped<ITelemetryRepository<Telemetry>, MongoDbMeasuresRepository>();
+            //services.AddScoped<IPoolRepository<Pool>, MongoDbPoolsRespository>();
+            //services.AddScoped<IUsersRepository<User>, MongoDbUsersRepository>();
+            //services.AddScoped<IPoolConfigurationsRepository<PoolConfiguration>, MongoDbPoolConfiguartionsRespository>();
 
-            services.AddScoped<UserPermissionService>();
+            //services.AddScoped<UserPermissionService>();
 
             services.AddSingleton<IConnectionMapper<string>, ConnectionMapping<string>>();
 

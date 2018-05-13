@@ -5,9 +5,10 @@ namespace Poseidon.Repositories
     public interface IRepository<T>
     {
         IQueryable<T> Get();
-        T GetById(string id);
-        void Add(T model);
-        void Update(string id, T model);
-        void Delete(T model);
+        T GetById(int id);
+        void Add(T entity);
+        void Delete(T entity);
+
+        void SaveChanges();
     }
 }

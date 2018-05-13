@@ -21,8 +21,6 @@ namespace Poseidon.Models
         [BsonElement]
         public string Login { get; set; }
         [BsonElement]
-        public string Password { get; set; }
-        [BsonElement]
         public IEnumerable<string> PoolsId { get; set; }
         [BsonElement]
         public string Role { get; set; }

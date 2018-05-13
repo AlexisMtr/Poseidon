@@ -1,6 +1,6 @@
 ﻿namespace Poseidon.Models
 {
-    public enum MeasureType
+    public enum TelemetryType
     {
         Temperature,
         Ph,
