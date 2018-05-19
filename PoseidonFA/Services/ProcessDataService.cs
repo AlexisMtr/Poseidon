@@ -1,176 +1,94 @@
-﻿using PoseidonFA.Configuration;
-using PoseidonFA.Helpers;
+﻿using PoseidonFA.Helpers;
 using PoseidonFA.Models;
-using PoseidonFA.Payload;
-using PoseidonFA.Repositories;
-using System;
+using PoseidonFA.Dtos;
 using System.Collections.Generic;
+using System;
 
 namespace PoseidonFA.Services
 {
     public class ProcessDataService
     {
-        private readonly IRepository<Measure> MeasuresRepository;
-        private readonly IRepository<Alarm> AlarmsRepository;
-        private readonly IConfigurationRepository<PoolConfiguration> ConfigurationRepository;
-        private readonly INotificationHub NotificationHub;
-        
-        public readonly PoseidonSettings PoseidonSettings;
+        private readonly PoolService poolService;
+        private readonly AlarmService alarmService;
+        private readonly TelemetryService telemetryService;
+        private readonly ILogger log;
 
-        public ProcessDataService(IRepository<Measure> measureRepository, IRepository<Alarm> alarmRepository,
-            IConfigurationRepository<PoolConfiguration> configurationRepository, PoseidonSettings poseidonSettings, INotificationHub hub)
+        public ProcessDataService(PoolService poolService, AlarmService alarmService, TelemetryService telemetryService, ILogger log)
         {
-            this.MeasuresRepository = measureRepository;
-            this.AlarmsRepository = alarmRepository;
-            this.ConfigurationRepository = configurationRepository;
-            this.PoseidonSettings = poseidonSettings;
-            this.NotificationHub = hub;
+            this.poolService = poolService;
+            this.alarmService = alarmService;
+            this.telemetryService = telemetryService;
+            this.log = log;
         }
 
-        public void Process(string poolId, IncomingMeasures data)
+        public void Process(int poolId, TelemetriesSetDto data)
         {
-            if (string.IsNullOrEmpty(poolId))
-                throw new ArgumentNullException($"Argument {nameof(poolId)} cannot be null");
-
-            var configuration = this.ConfigurationRepository.GetByPoolId(poolId);
-            var usersId = this.ConfigurationRepository.GetUsersByPoolId(poolId) as List<string>;
-
-            var alarmsToSend = new List<Alarm>();
-
-            if(IsNumeric(data.Ph.Value, out double ph))
+            Pool pool = poolService.Get(poolId);
+            if (pool == null)
             {
-                if(!ph.IsBetween(configuration.PhMinValue, configuration.PhMaxValue))
-                {
-                    var alarm = new Alarm
-                    {
-                        PoolId = poolId,
-                        Timestamp = data.Ph.Timestamp,
-                        AlarmType = AlarmType.Ph,
-                        Description = (ph > configuration.PhMaxValue ? "Solution Saline" : "Solution Acide") + $" (ph: {ph})"
-                    };
+                log.Error($"Pool with Id {poolId} not found");
+                return;
+            };
 
-                    this.AlarmsRepository.Add(alarm);
-                    alarmsToSend.Add(alarm);
-                }
-
-                this.MeasuresRepository.Add(new Measure
-                {
-                    Id = $"M{data.Ph.Timestamp}{(int)MeasureType.Ph}",
-                    Timestamp = data.Ph.Timestamp,
-                    MeasureType = MeasureType.Ph,
-                    PoolId = poolId,
-                    Value = ph,
-                    Unit = ""
-                });
-            }
-
-            if(IsNumeric(data.Level.Value, out double level))
+            IEnumerable<Telemetry> telemetries = new List<Telemetry>(); // TODO : convert
+            foreach(Telemetry telemetry in telemetries)
             {
-                if(!level.IsBetween(configuration.WaterLevelMinValue, configuration.WaterLevelMaxValue))
-                {
-                    var alarm = new Alarm
-                    {
-                        PoolId = poolId,
-                        Timestamp = data.Level.Timestamp,
-                        AlarmType = AlarmType.WaterLevel,
-                        Description = level > configuration.WaterLevelMaxValue ? "Débordement" : "Niveau d'eau trop faible, arrêter le système de pompage"
-                    };
-
-                    this.AlarmsRepository.Add(alarm);
-                    alarmsToSend.Add(alarm);
-                }
-
-                this.MeasuresRepository.Add(new Measure
-                {
-                    Id = $"M{data.Level.Timestamp}{(int)MeasureType.Level}",
-                    Timestamp = data.Level.Timestamp,
-                    MeasureType = MeasureType.Level,
-                    PoolId = poolId,
-                    Value = level,
-                    Unit = "m3"
-                });
+                ProcessTelemetry(telemetry, pool);
             }
-
-            if (IsNumeric(data.Temperature.Value, out double temperature))
-            {
-                if (!temperature.IsBetween(configuration.TemperatureMinValue, configuration.TemperatureMaxValue))
-                {
-                    var alarm = new Alarm
-                    {
-                        PoolId = poolId,
-                        Timestamp = data.Temperature.Timestamp,
-                        AlarmType = AlarmType.Temperature,
-                        Description = temperature > configuration.TemperatureMaxValue ? "La température de l'eau a dépassée le seuil maximal" : "Température trop basse pour se baigner"
-                    };
-
-                    this.AlarmsRepository.Add(alarm);
-                    alarmsToSend.Add(alarm);
-                }
-
-                this.MeasuresRepository.Add(new Measure
-                {
-                    Id = $"M{data.Temperature.Timestamp}{(int)MeasureType.Temperature}",
-                    Timestamp = data.Temperature.Timestamp,
-                    MeasureType = MeasureType.Temperature,
-                    PoolId = poolId,
-                    Value = temperature,
-                    Unit = "°C"
-                });
-            }
-
-            if (IsNumeric(data.Battery.Value, out double battery))
-            {
-                if (battery.IsBetween(0, PoseidonSettings.BatteryLevelAlarm))
-                {
-                    var alarm = new Alarm
-                    {
-                        PoolId = poolId,
-                        Timestamp = data.Temperature.Timestamp,
-                        AlarmType = AlarmType.BatteryLow,
-                        Description = $"Niveau de batterie faible ({battery}%)"
-                    };
-
-                    this.AlarmsRepository.Add(alarm);
-                    alarmsToSend.Add(alarm);
-                }
-
-                this.MeasuresRepository.Add(new Measure
-                {
-                    Id = $"M{data.Battery.Timestamp}{(int)MeasureType.Battery}",
-                    Timestamp = data.Battery.Timestamp,
-                    MeasureType = MeasureType.Battery,
-                    PoolId = poolId,
-                    Value = battery,
-                    Unit = "%"
-                });
-            }
-
-            //if(alarmsToSend.Count > 0 && usersId.Count > 0)
-            //{
-            //    this.NotificationHub.Send(alarmsToSend, usersId);
-            //}
         }
 
-        private bool IsNumeric(object value, out double valueAsDouble)
+        private void ProcessTelemetry(Telemetry telemetry, Pool pool)
         {
-            if(value is double d)
+            double minValue = 0.00;
+            double maxValue = 0.00;
+            AlarmType alarmType;
+
+            switch(telemetry.Type)
             {
-                valueAsDouble = d;
-                return true;
-            }
-            if(value is int i)
-            {
-                valueAsDouble = i;
-                return true;
-            }
-            if (value is long l)
-            {
-                valueAsDouble = l;
-                return true;
+                case TelemetryType.Level:
+                    minValue = pool.WaterLevelMinValue;
+                    maxValue = pool.WaterLevelMaxValue;
+                    alarmType = AlarmType.WaterLevel;
+                    break;
+                case TelemetryType.Battery:
+                    minValue = 0;
+                    maxValue = 20;
+                    alarmType = AlarmType.BatteryLow;
+                    break;
+                case TelemetryType.Ph:
+                    minValue = pool.PhMinValue;
+                    maxValue = pool.PhMaxValue;
+                    alarmType = AlarmType.Ph;
+                    break;
+                case TelemetryType.Temperature:
+                    minValue = pool.TemperatureMinValue;
+                    maxValue = pool.TemperatureMaxValue;
+                    alarmType = AlarmType.Temperature;
+                    break;
+                case TelemetryType.Other:
+                    alarmType = AlarmType.DeviceWarning;
+                    break;
+                default:
+                    return;
             }
 
-            valueAsDouble = 0.00;
-            return false;
+            CheckForAlarm(pool, telemetry, minValue, maxValue, alarmType);
+
+            telemetry.Pool = pool;
+            telemetryService.Add(telemetry);
+        }
+
+        private void CheckForAlarm(Pool pool, Telemetry telemetry, double minValue, double maxValue, AlarmType type)
+        {
+            if (telemetry.Value is double value && value.IsBetween(minValue, maxValue, false)) return;
+
+            alarmService.Add(new Alarm
+            {
+                Pool = pool,
+                DateTime = DateTime.UtcNow,
+                Description = $"Generated on {DateTime.UtcNow} by Poseidon",
+                AlarmType = type
+            });
         }
     }
 }
