@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.26730.15
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Poseidon", "Poseidon\Poseidon.csproj", "{838ABF1C-A9A9-436A-AF25-5ED216097AA5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoseidonFA", "PoseidonFA\PoseidonFA.csproj", "{1DAB7473-D26F-4C2D-9420-D10A682EB1C5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PoseidonFA", "PoseidonFA\PoseidonFA.csproj", "{1DAB7473-D26F-4C2D-9420-D10A682EB1C5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

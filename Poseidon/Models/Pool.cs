@@ -14,9 +14,11 @@ namespace Poseidon.Models
         public double WaterLevelMaxValue { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
+        public string DeviceId { get; set; }
 
-        public IEnumerable<Telemetry> Measures { get; set; }
-        public IEnumerable<Alarm> Alarms { get; set; }
-        public IEnumerable<User> Users { get; set; }
+        public ICollection<Telemetry> Measures { get; set; }
+        public ICollection<Alarm> Alarms { get; set; }
+        public ICollection<User> Users { get; set; }
+        public ICollection<Season> Seasons { get; set; }
     }
 }

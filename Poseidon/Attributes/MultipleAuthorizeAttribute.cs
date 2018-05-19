@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 
-namespace Poseidon.Configuration
+namespace Poseidon.Attributes
 {
     public class MultipleAuthorizeAttribute : AuthorizeAttribute
     {

@@ -1,7 +1,7 @@
 ﻿# POSEIDON
 
 ## Description
-Poseidon is a C# Backend solution for connected swimmingpool developed with [.NET Core 2](https://github.com/dotnet/core/blob/master/release-notes/download-archives/2.0.0-download.md) hosted on a IIS Server. It will be used by the futurs apps [Percy]() and [Sally]().
+Poseidon is a C# Backend solution for connected swimmingpool developed with [.NET Core 2](https://github.com/dotnet/core/blob/master/release-notes/download-archives/2.0.0-download.md) hosted on a IIS Server.
 
 The solution include 2 projects
 * **Poseidon**, the API Solution
@@ -9,18 +9,17 @@ The solution include 2 projects
 
 
 ## Getting Started
-Before using Poseidon API Solution, you need to install and run [MongoDB](https://docs.mongodb.com/v3.0/tutorial/install-mongodb-on-windows/) NoSQL Database. Once started, run MongoDb Shell and copy/paste content from `Poseidon\Resources\InitialInsert.txt` file (or use it to create your own data sets) into it.
+Before using Poseidon API Solution, you need to install an SQLServer Database
 
 ### Configure Poseidon
-Add the *MongoDbSettings* and *IssuerSigningKey* into `secrets.json`<sup>1</sup> file with these lines
+Add the *ConnectionStrings:DefaultConnection* and *IssuerSigningKey:SigningKey* into `secrets.json`<sup>1</sup> file with these lines
 ```json
 {
-  "MongoDbSettings": {
-    "DefaultConnectionString": "<your connection string here>",
-    "DefaultDbName":  "poseidon"
-  },
   "IssuerSigningKey": {
     "SigningKey":  "<your issuer signin key here>"
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "<your sqlserver connection string>"
   }
 }
 ```
@@ -50,21 +49,6 @@ Thanks to the SwaggerUI you can see and test all endpoints of Poseidon
 
 
 ## Troubleshooting
-### Poseidon is running but it return nothings
-It's possible that you missed a step in the configuration. Make sur that you have correctly configure the `secrets.json` file, in particular the `DefaultDbName` that must be the same name used in the `Poseidon\Resources\InitialInsert.txt` file
-```
-use poseidon
- 
-db.users.insert(
-...
-```
-```json
-"MongoDbSettings": {
-  "DefaultConnectionString": "<your connection string here>",
-  "DefaultDbName":  "poseidon"
-}
-```
-
 ### C# Error : Could not load file or assembly 'System.Runtime.InteropServices.RuntimeInformation' (Azure Function App only)
 You probably update MongoDB.Driver to 2.4 or higher. Downgrade to 2.3 and the issue must be fixed
 

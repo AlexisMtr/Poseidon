@@ -1,7 +1,5 @@
 ﻿using Poseidon.Filters;
-using System;
 using System.Linq;
-using System.Linq.Expressions;
 
 namespace Poseidon.Helpers
 {
@@ -35,16 +33,6 @@ namespace Poseidon.Helpers
         public static int Count<TSource, TResult>(this IQueryable<TSource> source, IFilter<TSource, TResult> filter)
         {
             return filter.Filter(source).Count();
-        }
-
-        public static IQueryable<T> Includes<T>(this IQueryable<T> source, Expression<Func<T, object>>[] includes)
-        {
-            // Check .NETCore EF6
-            //foreach(var include in includes)
-            //{
-            //    source = source.Include(include);
-            //}
-            return source;
         }
     }
 }

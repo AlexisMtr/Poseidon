@@ -7,8 +7,12 @@ using Poseidon.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Poseidon.Hubs;
-using Poseidon.Helpers;
+using Microsoft.EntityFrameworkCore;
+using Poseidon.Repositories;
+using Poseidon.Repositories.SQL;
+using Poseidon.Services;
+using Poseidon.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace Poseidon
 {
@@ -31,28 +35,33 @@ namespace Poseidon
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // Add framework services.
-            services.Configure<MongoDbSettings>(Configuration.GetSection("MongoDbSettings"));
             services.Configure<IssuerSigningKeySettings>(Configuration.GetSection("IssuerSigningKey"));
-            services.AddScoped<MongoDbContext>();
+
+            services.AddDbContext<PoseidonContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddIdentity<User, IdentityRole>()
+                .AddEntityFrameworkStores<PoseidonContext>();
             
-            //services.AddScoped<IAlarmRepository<Alarm>, MongoDbAlarmsRepository>();
-            //services.AddScoped<ITelemetryRepository<Telemetry>, MongoDbMeasuresRepository>();
-            //services.AddScoped<IPoolRepository<Pool>, MongoDbPoolsRespository>();
-            //services.AddScoped<IUsersRepository<User>, MongoDbUsersRepository>();
-            //services.AddScoped<IPoolConfigurationsRepository<PoolConfiguration>, MongoDbPoolConfiguartionsRespository>();
+            services.AddScoped<IAlarmRepository, AlarmRepository>();
+            services.AddScoped<IPoolRepository, PoolRepository>();
+            services.AddScoped<ITelemetryRepository, TelemetryRepository>();
+            services.AddScoped<UserManager<User>>();
+            services.AddScoped<RoleManager<IdentityRole>>();
+            services.AddScoped<SignInManager<User>>();
 
-            //services.AddScoped<UserPermissionService>();
-
-            services.AddSingleton<IConnectionMapper<string>, ConnectionMapping<string>>();
-
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            services.AddScoped<AlarmService>();
+            services.AddScoped<PoolService>();
+            services.AddScoped<TelemetryService>();
+            services.AddScoped<UserService>();
+            
+            services.AddAuthentication(options => options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = false,
                     ValidateAudience = false,
                     ValidateActor = false,
+                    ValidateIssuerSigningKey = true,
+                    ValidateLifetime = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("IssuerSigningKey")["SigningKey"]))
                 };
             });
@@ -73,9 +82,7 @@ namespace Poseidon
                 });
                 c.OperationFilter<AuthorizationHeaderParameterOperationFilter>();
             });
-
-            services.AddSignalR();
-
+            
             services.AddMvc();
         }
 
@@ -84,7 +91,7 @@ namespace Poseidon
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
-
+            
             app.UseDeveloperExceptionPage();
             app.UseAuthentication();
 
@@ -94,11 +101,6 @@ namespace Poseidon
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Poseidon V1");
             });
 
-            app.UseSignalR(routes =>
-            {
-                routes.MapHub<AlarmsHub>("alarms");
-            });
-            
             app.UseMvc();
         }
     }

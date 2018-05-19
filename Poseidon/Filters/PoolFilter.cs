@@ -8,6 +8,14 @@ namespace Poseidon.Filters
         public string Id { get; set; }
         public bool? HasPendingAlarms { get; set; }
 
+        public virtual object Clone()
+        {
+            return new PoolFilter
+            {
+                Id = Id,
+                HasPendingAlarms = HasPendingAlarms
+            };
+        }
 
         public IQueryable<Pool> Filter(IQueryable<Pool> source)
         {

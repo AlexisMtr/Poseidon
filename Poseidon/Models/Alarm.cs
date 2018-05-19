@@ -1,25 +1,15 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-using Poseidon.Filters;
+﻿using Poseidon.Filters;
+using System;
 
 namespace Poseidon.Models
 {
-    [BsonIgnoreExtraElements]
-    [BsonNoId]
     public class Alarm : TimeObject
     {
-        [BsonElement]
         public string Id { get; set; }
-        [BsonElement]
         public Pool Pool { get; set; }
-        [BsonElement]
-        public long Timestamp { get; set; }
-        [BsonElement]
         public string Description { get; set; }
-        [BsonElement]
         public bool Ack { get; set; }
-        [BsonElement]
-        public long? AcknowledgmentTimestamp { get; set; }
-        [BsonElement]
+        public DateTime? AcknowledgmentDateTime { get; set; }
         public AlarmType AlarmType { get; set; }
     }
 }

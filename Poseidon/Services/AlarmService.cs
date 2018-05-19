@@ -1,5 +1,4 @@
-﻿using AlexisMtrTools.DateTime;
-using Poseidon.Filters;
+﻿using Poseidon.Filters;
 using Poseidon.Models;
 using Poseidon.Repositories;
 using System;
@@ -28,7 +27,7 @@ namespace Poseidon.Services
 
             return new PaginatedElement<Alarm>
             {
-                TotalElementCount = 0,
+                TotalElementCount = totalElementCount,
                 Elements = alarms,
                 PageCount = 0
             };
@@ -38,7 +37,7 @@ namespace Poseidon.Services
         {
             Alarm alarm = Get(id);
             alarm.Ack = true;
-            alarm.AcknowledgmentTimestamp = DateTime.UtcNow.ToTimestamp();
+            alarm.AcknowledgmentDateTime = DateTime.UtcNow;
             alarmRepository.SaveChanges();
 
             return alarm;

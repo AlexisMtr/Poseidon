@@ -1,10 +1,15 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Poseidon.Configuration;
+using Poseidon.Attributes;
 using Poseidon.Dtos;
+using Poseidon.Filters;
 using Poseidon.Models;
 using Poseidon.Services;
+using System.Collections.Generic;
 using System.Net;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace Poseidon.Controllers
 {
@@ -15,71 +20,83 @@ namespace Poseidon.Controllers
         private readonly PoolService poolService;
         private readonly TelemetryService telemetryService;
         private readonly AlarmService alarmService;
+        private readonly UserManager<User> userManager;
 
-        public PoolsController(PoolService poolService, TelemetryService telemetryService, AlarmService alarmService)
+        public PoolsController(PoolService poolService, TelemetryService telemetryService, AlarmService alarmService, UserManager<User> userManager)
         {
             this.poolService = poolService;
             this.telemetryService = telemetryService;
             this.alarmService = alarmService;
+            this.userManager = userManager;
         }
 
         [HttpGet]
         [Authorize(Roles = Roles.SysAdmin)]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PaginatedDto<PoolDto>))]
-        public IActionResult GetAll()
+        public IActionResult GetAll([FromQuery]PoolFilter filter, [FromQuery]int rowsPerPage = 20, [FromQuery]int pageNumber = 1)
         {
-            return Ok();
+            PaginatedElement<Pool> pools = poolService.Get(filter, rowsPerPage, pageNumber);
+            return Ok(pools);
         }
 
         [HttpGet("{id}")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolDto))]
-        public IActionResult Get(int id)
+        public IActionResult Get([FromRoute]int id)
         {
-            return Ok();
+            Pool pool = poolService.Get(id);
+            return Ok(pool);
         }
 
         [HttpGet("{id}/telemetry/current")]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolDto))]
-        public IActionResult GetCurrentTelemetry(int id)
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(IEnumerable<TelemetryDto>))]
+        public IActionResult GetCurrentTelemetry([FromRoute]int id)
         {
-            return Ok();
-        }        
+            IEnumerable<Telemetry> telemetries = telemetryService.GetAllCurrent(id);
+            return Ok(telemetries);
+        }
 
         [HttpGet("{id}/telemetry/history")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PaginatedDto<TelemetryDto>))]
-        public IActionResult GetTelemetryHistory(int id)
+        public IActionResult GetTelemetryHistory([FromRoute]int id, [FromQuery]TelemetryFilter filter, int rowsPerPage = 20, int pageNumber = 1)
         {
-            return Ok();
+            PaginatedElement<Telemetry> telemetries = telemetryService.GetByPool(id, filter, rowsPerPage, pageNumber);
+            return Ok(telemetries);
         }
 
         [HttpGet("{id}/telemetry/forecast")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolDto))]
-        public IActionResult GetForecastTelemetry(int id)
+        public IActionResult GetForecastTelemetry([FromRoute]int id)
         {
-            return Ok();
+            return NotFound();
         }
 
         [HttpGet("{id}/alarms")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PaginatedDto<AlarmDto>))]
-        public IActionResult GetAlarms(int id)
+        public IActionResult GetAlarms([FromRoute]int id, [FromQuery]AlarmFilter filter, [FromQuery]int rowsPerPage = 20, [FromQuery]int pageNumber = 1)
         {
-            return Ok();
+            PaginatedElement<Alarm> alarms = alarmService.GetByPool(id, filter, rowsPerPage, pageNumber);
+            return Ok(alarms);
         }
 
         [HttpPost]
         [Authorize(Roles = Roles.SysAdmin)]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolDto))]
-        public IActionResult Post(object model)
+        public async Task<IActionResult> Post([FromBody]PoolCreationDto model)
         {
-            return Ok();
+            string userEmail = User.FindFirst(ClaimTypes.Email).Value;
+            User user = await userManager.FindByEmailAsync(userEmail);
+
+            Pool pool = poolService.Add(model, user);
+            return Ok(pool);
         }
 
         [HttpPut("{id}")]
         [MultipleAuthorize(new string[] { Roles.SysAdmin, Roles.Administrator })]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolDto))]
-        public IActionResult Put(int id, object model)
+        public IActionResult Put([FromRoute]int id, [FromBody]PoolCreationDto model)
         {
-            return Ok();
+            Pool pool = poolService.Update(id, model);
+            return Ok(pool);
         }
     }
 }
