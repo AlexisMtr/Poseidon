@@ -82,7 +82,8 @@ namespace Poseidon
                 });
                 c.OperationFilter<AuthorizationHeaderParameterOperationFilter>();
             });
-            
+
+            services.AddCors();
             services.AddMvc();
         }
 
@@ -94,6 +95,13 @@ namespace Poseidon
             
             app.UseDeveloperExceptionPage();
             app.UseAuthentication();
+
+            app.UseCors(policy =>
+            {
+                policy.AllowAnyOrigin();
+                policy.AllowAnyMethod();
+                policy.AllowAnyHeader();
+            });
 
             app.UseSwagger();
             app.UseSwaggerUI(c =>

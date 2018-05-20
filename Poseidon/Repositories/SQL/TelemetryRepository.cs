@@ -32,7 +32,7 @@ namespace Poseidon.Repositories.SQL
         public int CountByPool(int poolId, IFilter<Telemetry> filter)
         {
             return context.Telemetries
-                .Where(e => e.Pool.Id.Equals(poolId))
+                .Where(e => e.Pool.Id == poolId)
                 .Count(filter ?? new TelemetryFilter());
         }
 
@@ -50,7 +50,7 @@ namespace Poseidon.Repositories.SQL
         public Telemetry GetById(int id)
         {
             return context.Telemetries
-                .FirstOrDefault(e => e.Id.Equals(id));
+                .FirstOrDefault(e => e.Id == id);
         }
 
         public IEnumerable<Telemetry> GetByPool(int poolId, IFilter<Telemetry> filter, int rowsPerPage, int pageNumber, params Expression<Func<Telemetry, object>>[] includes)
@@ -59,7 +59,7 @@ namespace Poseidon.Repositories.SQL
 
             return context.Telemetries
                 .Where(filter ?? new TelemetryFilter())
-                .Where(e => e.Pool.Id.Equals(poolId))
+                .Where(e => e.Pool.Id == poolId)
                 .OrderBy(e => e.DateTime)
                 .Skip(skip)
                 .Take(rowsPerPage);
@@ -69,8 +69,9 @@ namespace Poseidon.Repositories.SQL
         {
             return context.Telemetries
                 .Where(filter ?? new TelemetryFilter())
+                .Where(e => e.Pool.Id == poolId)
                 .OrderBy(e => e.DateTime)
-                .LastOrDefault(e => e.Pool.Id.Equals(poolId));
+                .LastOrDefault();
         }
 
         public void SaveChanges()

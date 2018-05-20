@@ -30,6 +30,8 @@ namespace Poseidon.Services
                 GetCurrent(poolId, TelemetryType.Ph)
             };
 
+            telemetries.RemoveAll(e => e == null);
+
             return telemetries;
         }
 
