@@ -3,6 +3,8 @@ using System.Net;
 using Microsoft.AspNetCore.Authorization;
 using Poseidon.Services;
 using Poseidon.Models;
+using AutoMapper;
+using Poseidon.Dtos;
 
 namespace Poseidon.Controllers
 {
@@ -11,10 +13,12 @@ namespace Poseidon.Controllers
     public class AlarmsController : Controller
     {
         private readonly AlarmService alarmService;
+        private readonly IMapper mapper;
 
-        public AlarmsController(AlarmService alarmService)
+        public AlarmsController(AlarmService alarmService, IMapper mapper)
         {
             this.alarmService = alarmService;
+            this.mapper = mapper;
         }
 
         [HttpPut("{id}/ack")]
@@ -22,7 +26,7 @@ namespace Poseidon.Controllers
         public IActionResult Ack(int id)
         {
             Alarm alarm = alarmService.Ack(id);
-            return Ok(alarm);
+            return Ok(mapper.Map<AlarmDto>(alarm));
         }
     }
 }

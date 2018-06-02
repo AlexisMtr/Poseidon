@@ -13,6 +13,8 @@ using Poseidon.Repositories.SQL;
 using Poseidon.Services;
 using Poseidon.Models;
 using Microsoft.AspNetCore.Identity;
+using AutoMapper;
+using Poseidon.Configuration.MapperProfiles;
 
 namespace Poseidon
 {
@@ -52,7 +54,7 @@ namespace Poseidon
             services.AddScoped<PoolService>();
             services.AddScoped<TelemetryService>();
             services.AddScoped<UserService>();
-            
+                        
             services.AddAuthentication(options => options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -82,9 +84,15 @@ namespace Poseidon
                 });
                 c.OperationFilter<AuthorizationHeaderParameterOperationFilter>();
             });
-
+            
             services.AddCors();
             services.AddMvc();
+            services.AddAutoMapper(config =>
+            {
+                config.AddProfile<PoolProfile>();
+                config.AddProfile<AlarmProfile>();
+                config.AddProfile<TelemetryProfile>();
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

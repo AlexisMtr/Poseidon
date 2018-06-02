@@ -12,9 +12,9 @@ using PoseidonFA.Configuration;
 
 namespace PoseidonFA
 {
-    public static class PostMeasuresFunction
+    public static class TelemetriesFunction
     {
-        [FunctionName("PostMeasures")]
+        [FunctionName("Telemetries")]
         public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)]HttpRequestMessage req, TraceWriter log)
         {
             log.Info("C# HTTP trigger function processed a request.");

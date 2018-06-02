@@ -7,6 +7,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Poseidon", "Poseidon\Poseid
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PoseidonFA", "PoseidonFA\PoseidonFA.csproj", "{1DAB7473-D26F-4C2D-9420-D10A682EB1C5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{41675DFC-8307-469C-979A-B2BFA1B09E11}"
+	ProjectSection(SolutionItems) = preProject
+		azuredeploy.json = azuredeploy.json
+	EndProjectSection
+EndProject
+Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "PoseidonRG", "PoseidonRG\PoseidonRG.deployproj", "{3CB66D19-A331-4DC8-A5A1-786E04D9D9F1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +28,10 @@ Global
 		{1DAB7473-D26F-4C2D-9420-D10A682EB1C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1DAB7473-D26F-4C2D-9420-D10A682EB1C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1DAB7473-D26F-4C2D-9420-D10A682EB1C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3CB66D19-A331-4DC8-A5A1-786E04D9D9F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3CB66D19-A331-4DC8-A5A1-786E04D9D9F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3CB66D19-A331-4DC8-A5A1-786E04D9D9F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3CB66D19-A331-4DC8-A5A1-786E04D9D9F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

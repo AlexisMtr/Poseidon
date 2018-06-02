@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Poseidon.Attributes;
@@ -21,13 +22,16 @@ namespace Poseidon.Controllers
         private readonly TelemetryService telemetryService;
         private readonly AlarmService alarmService;
         private readonly UserManager<User> userManager;
+        private readonly IMapper mapper;
 
-        public PoolsController(PoolService poolService, TelemetryService telemetryService, AlarmService alarmService, UserManager<User> userManager)
+        public PoolsController(PoolService poolService, TelemetryService telemetryService,
+            AlarmService alarmService, UserManager<User> userManager, IMapper mapper)
         {
             this.poolService = poolService;
             this.telemetryService = telemetryService;
             this.alarmService = alarmService;
             this.userManager = userManager;
+            this.mapper = mapper;
         }
 
         [HttpGet]
@@ -36,7 +40,7 @@ namespace Poseidon.Controllers
         public IActionResult GetAll([FromQuery]PoolFilter filter, [FromQuery]int rowsPerPage = 20, [FromQuery]int pageNumber = 1)
         {
             PaginatedElement<Pool> pools = poolService.Get(filter, rowsPerPage, pageNumber);
-            return Ok(pools);
+            return Ok(mapper.Map<PaginatedDto<PoolDto>>(pools));
         }
 
         [HttpGet("{id}")]
@@ -44,7 +48,7 @@ namespace Poseidon.Controllers
         public IActionResult Get([FromRoute]int id)
         {
             Pool pool = poolService.Get(id);
-            return Ok(pool);
+            return Ok(mapper.Map<PoolDto>(pool));
         }
 
         [HttpGet("{id}/telemetry/current")]
@@ -52,7 +56,7 @@ namespace Poseidon.Controllers
         public IActionResult GetCurrentTelemetry([FromRoute]int id)
         {
             IEnumerable<Telemetry> telemetries = telemetryService.GetAllCurrent(id);
-            return Ok(telemetries);
+            return Ok(mapper.Map<IEnumerable<TelemetryDto>>(telemetries));
         }
 
         [HttpGet("{id}/telemetry/history")]
@@ -60,7 +64,7 @@ namespace Poseidon.Controllers
         public IActionResult GetTelemetryHistory([FromRoute]int id, [FromQuery]TelemetryFilter filter, int rowsPerPage = 20, int pageNumber = 1)
         {
             PaginatedElement<Telemetry> telemetries = telemetryService.GetByPool(id, filter, rowsPerPage, pageNumber);
-            return Ok(telemetries);
+            return Ok(mapper.Map<PaginatedDto<TelemetryDto>>(telemetries));
         }
 
         [HttpGet("{id}/telemetry/forecast")]
@@ -75,7 +79,7 @@ namespace Poseidon.Controllers
         public IActionResult GetAlarms([FromRoute]int id, [FromQuery]AlarmFilter filter, [FromQuery]int rowsPerPage = 20, [FromQuery]int pageNumber = 1)
         {
             PaginatedElement<Alarm> alarms = alarmService.GetByPool(id, filter, rowsPerPage, pageNumber);
-            return Ok(alarms);
+            return Ok(mapper.Map<PaginatedDto<AlarmDto>>(alarms));
         }
 
         [HttpPost]
@@ -87,7 +91,7 @@ namespace Poseidon.Controllers
             User user = await userManager.FindByEmailAsync(userEmail);
 
             Pool pool = poolService.Add(model, user);
-            return Ok(pool);
+            return Ok(mapper.Map<PoolDto>(pool));
         }
 
         [HttpPut("{id}")]
@@ -96,7 +100,7 @@ namespace Poseidon.Controllers
         public IActionResult Put([FromRoute]int id, [FromBody]PoolCreationDto model)
         {
             Pool pool = poolService.Update(id, model);
-            return Ok(pool);
+            return Ok(mapper.Map<PoolDto>(pool));
         }
     }
 }

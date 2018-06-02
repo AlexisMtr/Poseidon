@@ -1,0 +1,98 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "web-api-name": {
+      "type": "string",
+      "defaultValue": "poseidon-api"
+    },
+    "web-api-service-plan-name": {
+      "type": "string",
+      "defaultValue": "poseidon-appservice-plan"
+    },
+    "database-server-name": {
+      "type": "string",
+      "defaultValue": "poseidon-sql-srv"
+    },
+    "database-name": {
+      "type": "string",
+      "defaultValue": "poseidon-sql-db"
+    },
+    "database-user": {
+      "type": "string",
+      "defaultValue": "poseidon-admin"
+    },
+    "database-pwd": {
+      "type": "securestring"
+    },
+    "database-enable-mars": {
+      "type": "bool",
+      "defaultValue": false,
+      "allowedValues": [ true, false ]
+    },
+    "signing-key": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "sql-connection-string": "[concat('Server=tcp:', parameters('database-server-name'), '.database.windows.net,1443;Initial Catalog=', parameters('database-name'), ';Persist Security Info=False;User ID=', parameters('database-user'), ';Password=', parameters('database-pwd'), ';MultipleActiveResultSets=', parameters('database-enable-mars'), ';Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-09-01",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('web-api-service-plan-name')]",
+      "properties": {
+        "sku": "Free"
+      },
+      "type": "Microsoft.Web/serverfarms"
+    },
+    {
+      "apiVersion": "2014-04-01",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('database-server-name')]",
+      "properties": {
+        "administratorLogin": "[parameters('database-user')]",
+        "administratorLoginPassword": "[parameters('database-pwd')]",
+        "version": "12.0"
+      },
+      "resources": [
+        {
+          "apiVersion": "2014-04-01",
+          "location": "[resourceGroup().location]",
+          "name": "[parameters('database-name')]",
+          "properties": {
+            "edition": "Free"
+          },
+          "type": "databases"
+        }
+      ],
+      "type": "Microsoft.Sql/servers"
+    },
+    {
+      "apiVersion": "2016-08-01",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('web-api-name')]",
+      "type": "Microsoft.Web/sites",
+      "properties": {
+        "appSettings": [
+          {
+            "name": "IssuerSigningKey:SigningKey",
+            "value": "[parameters('signing-key')]"
+          }
+        ],
+        "connectionStrings": [
+          {
+            "name": "DefaultConnection",
+            "type": "SQLAzure",
+            "connectionString": "[variables('sql-connection-string')]"
+          }
+        ]
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Sql/servers/', parameters('database-server-name'))]",
+        "[concat('Microsoft.Web/serverfarms/', parameters('web-api-service-plan-name'))]"
+      ]
+    }
+  ]
+}
