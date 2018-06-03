@@ -8,8 +8,8 @@ namespace Poseidon.Configuration.MapperProfiles
     {
         public PoolProfile()
         {
-            CreateMap<PoolProfile, PoolDto>();
-            CreateMap<PaginatedElement<PoolProfile>, PaginatedDto<PoolDto>>();
+            CreateMap<Pool, PoolDto>();
+            CreateMap<PaginatedElement<Pool>, PaginatedDto<PoolDto>>();
         }
     }
 }
