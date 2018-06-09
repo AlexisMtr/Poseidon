@@ -26,5 +26,6 @@ namespace Poseidon.Configuration
         public DbSet<Alarm> Alarms { get; set; }
         public DbSet<Telemetry> Telemetries { get; set; }
         public DbSet<Season> Seasons { get; set; }
+        public DbSet<UserPoolAssociation> UserPoolAssociations { get; set; }
     }
 }

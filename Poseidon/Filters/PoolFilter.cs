@@ -17,7 +17,7 @@ namespace Poseidon.Filters
             };
         }
 
-        public IQueryable<Pool> Filter(IQueryable<Pool> source)
+        public virtual IQueryable<Pool> Filter(IQueryable<Pool> source)
         {
             if (!string.IsNullOrEmpty(Id))
             {

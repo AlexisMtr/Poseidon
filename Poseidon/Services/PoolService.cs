@@ -34,8 +34,14 @@ namespace Poseidon.Services
                 WaterLevelMinValue = model.WaterLevelMinValue,
                 TemperatureMaxValue = model.TemperatureMaxValue,
                 TemperatureMinValue = model.TemperatureMinValue,
-                Users = new List<User> { user }
+                Users = new List<UserPoolAssociation>()
             };
+
+            pool.Users.Add(new UserPoolAssociation
+            {
+                User = user,
+                Pool = pool
+            });
 
             poolRepository.Add(pool);
             poolRepository.SaveChanges();
@@ -62,8 +68,14 @@ namespace Poseidon.Services
             return pool;
         }
 
-        public PaginatedElement<Pool> Get(IFilter<Pool> filter, int rowsPerPage, int pageNumber)
+        public PaginatedElement<Pool> Get(IFilter<Pool> filter, int rowsPerPage, int pageNumber, User user = null, string role = null)
         {
+            //if(user != null)
+            //{
+            //    ((IdentityPoolFilter)filter).Role = role;
+            //    ((IdentityPoolFilter)filter).User = user;
+            //}
+
             IEnumerable<Pool> alarms = poolRepository.Get(filter, rowsPerPage, pageNumber);
             int totalElementCount = poolRepository.Count(filter);
 

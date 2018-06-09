@@ -35,11 +35,13 @@ namespace Poseidon.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = Roles.SysAdmin)]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PaginatedDto<PoolDto>))]
-        public IActionResult GetAll([FromQuery]PoolFilter filter, [FromQuery]int rowsPerPage = 20, [FromQuery]int pageNumber = 1)
+        public async Task<IActionResult> GetAll([FromQuery]PoolFilter filter, [FromQuery]int rowsPerPage = 20, [FromQuery]int pageNumber = 1)
         {
-            PaginatedElement<Pool> pools = poolService.Get(filter, rowsPerPage, pageNumber);
+            string userEmail = User.FindFirst(ClaimTypes.Email).Value;
+            User user = await userManager.FindByEmailAsync(userEmail);
+
+            PaginatedElement<Pool> pools = poolService.Get(filter, rowsPerPage, pageNumber, user);
             return Ok(mapper.Map<PaginatedDto<PoolDto>>(pools));
         }
 

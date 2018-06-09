@@ -19,7 +19,7 @@ namespace Poseidon.Filters
 
         public IQueryable<Pool> Filter(IQueryable<Pool> source)
         {
-            return source.Where(e => e.Users.Select(u => u.Id).Contains(userId));
+            return source.Where(e => e.Users.Select(u => u.User.Id).Contains(userId));
         }
     }
 }

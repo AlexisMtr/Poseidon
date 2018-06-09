@@ -18,13 +18,21 @@ namespace Poseidon.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody]Credentials credentials)
         {
-            return Ok(await userService.Login(credentials));
+            string token = await userService.Login(credentials);
+            return Ok(new TokenDto
+            {
+                Token = token
+            });
         }
 
         [HttpPost("signin")]
         public async Task<IActionResult> SignIn(UserCreationDto model)
         {
-            return Ok(await userService.SignIn(model));
+            string token = await userService.SignIn(model);
+            return Ok(new TokenDto
+            {
+                Token = token
+            });
         }
     }
 }

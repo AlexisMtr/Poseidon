@@ -16,9 +16,9 @@ namespace Poseidon.Models
         public double Longitude { get; set; }
         public string DeviceId { get; set; }
 
-        public ICollection<Telemetry> Measures { get; set; }
+        public ICollection<Telemetry> Telemetries { get; set; }
         public ICollection<Alarm> Alarms { get; set; }
-        public ICollection<User> Users { get; set; }
+        public ICollection<UserPoolAssociation> Users { get; set; }
         public ICollection<Season> Seasons { get; set; }
     }
 }

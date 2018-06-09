@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using Poseidon.Configuration;
 using Poseidon.Filters;
 using Poseidon.Helpers;
@@ -53,7 +54,8 @@ namespace Poseidon.Repositories.SQL
         public Pool GetById(int id)
         {
             return context.Pools
-                .FirstOrDefault(e => e.Id.Equals(id));
+                .Include(e => e.Telemetries)
+                .FirstOrDefault(e => e.Id == id);
         }
 
         public void SaveChanges()
