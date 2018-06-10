@@ -3,6 +3,8 @@ using PoseidonFA.Models;
 using PoseidonFA.Dtos;
 using System.Collections.Generic;
 using System;
+using AutoMapper;
+using System.Configuration;
 
 namespace PoseidonFA.Services
 {
@@ -12,6 +14,7 @@ namespace PoseidonFA.Services
         private readonly AlarmService alarmService;
         private readonly TelemetryService telemetryService;
         private readonly ILogger log;
+        private readonly double batteryLevelAlarm;
 
         public ProcessDataService(PoolService poolService, AlarmService alarmService, TelemetryService telemetryService, ILogger log)
         {
@@ -19,6 +22,7 @@ namespace PoseidonFA.Services
             this.alarmService = alarmService;
             this.telemetryService = telemetryService;
             this.log = log;
+            this.batteryLevelAlarm = double.Parse(ConfigurationManager.AppSettings["BatteryLevelAlarm"]);
         }
 
         public void Process(int poolId, TelemetriesSetDto data)
@@ -30,7 +34,7 @@ namespace PoseidonFA.Services
                 return;
             };
 
-            IEnumerable<Telemetry> telemetries = new List<Telemetry>(); // TODO : convert
+            IEnumerable<Telemetry> telemetries = Mapper.Map<IEnumerable<Telemetry>>(data.Telemetries);
             foreach(Telemetry telemetry in telemetries)
             {
                 ProcessTelemetry(telemetry, pool);
@@ -52,7 +56,7 @@ namespace PoseidonFA.Services
                     break;
                 case TelemetryType.Battery:
                     minValue = 0;
-                    maxValue = 20;
+                    maxValue = batteryLevelAlarm;
                     alarmType = AlarmType.BatteryLow;
                     break;
                 case TelemetryType.Ph:
@@ -75,6 +79,7 @@ namespace PoseidonFA.Services
             CheckForAlarm(pool, telemetry, minValue, maxValue, alarmType);
 
             telemetry.Pool = pool;
+            telemetry.DateTime = DateTime.UtcNow;
             telemetryService.Add(telemetry);
         }
 
@@ -87,7 +92,8 @@ namespace PoseidonFA.Services
                 Pool = pool,
                 DateTime = DateTime.UtcNow,
                 Description = $"Generated on {DateTime.UtcNow} by Poseidon",
-                AlarmType = type
+                AlarmType = type,
+                Ack = false
             });
         }
     }

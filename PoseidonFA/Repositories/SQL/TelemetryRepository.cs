@@ -1,5 +1,6 @@
 ﻿using PoseidonFA.Configuration;
 using PoseidonFA.Models;
+using System;
 
 namespace PoseidonFA.Repositories.SQL
 {

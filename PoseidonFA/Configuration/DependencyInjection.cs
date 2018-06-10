@@ -13,7 +13,7 @@ namespace PoseidonFA.Configuration
         {
             ContainerBuilder builder = new ContainerBuilder();
 
-            builder.RegisterInstance(logger).As<ILogger>().InstancePerLifetimeScope();
+            builder.RegisterInstance(logger).As<ILogger>().SingleInstance();
             builder.RegisterType<PoseidonContext>().InstancePerLifetimeScope();
 
             builder.RegisterType<PoolRepository>().As<IPoolRepository, PoolRepository>().InstancePerLifetimeScope();
@@ -23,6 +23,7 @@ namespace PoseidonFA.Configuration
             builder.RegisterType<PoolService>().InstancePerLifetimeScope();
             builder.RegisterType<AlarmService>().InstancePerLifetimeScope();
             builder.RegisterType<TelemetryService>().InstancePerLifetimeScope();
+            builder.RegisterType<ProcessDataService>().InstancePerLifetimeScope();
 
             Container = builder.Build();
         }

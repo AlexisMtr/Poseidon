@@ -19,6 +19,7 @@ namespace PoseidonFA
         {
             log.Info("C# HTTP trigger function processed a request.");
 
+            MapperConfiguration.ConfigureMapper();
             DependencyInjection.InitializeContainer(new TraceWriterWrapper(log));
             using (var scope = DependencyInjection.Container.BeginLifetimeScope())
             {
