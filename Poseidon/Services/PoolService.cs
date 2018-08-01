@@ -1,5 +1,7 @@
-﻿using Poseidon.Dtos;
+﻿using AutoMapper;
+using Poseidon.Dtos;
 using Poseidon.Filters;
+using Poseidon.Helpers;
 using Poseidon.Models;
 using Poseidon.Repositories;
 using System.Collections.Generic;
@@ -9,10 +11,12 @@ namespace Poseidon.Services
     public class PoolService
     {
         private readonly IPoolRepository poolRepository;
+        private readonly IMapper mapper;
 
-        public PoolService(IPoolRepository poolRepository)
+        public PoolService(IPoolRepository poolRepository, IMapper mapper)
         {
             this.poolRepository = poolRepository;
+            this.mapper = mapper;
         }
 
         public Pool Get(int poolId)
@@ -22,20 +26,7 @@ namespace Poseidon.Services
 
         public Pool Add(PoolCreationDto model, User user)
         {
-            Pool pool = new Pool
-            {
-                Name = model.Name,
-                Latitude = model.Latitude,
-                Longitude = model.Longitude,
-                DeviceId = model.DeviceId,
-                PhMaxValue = model.PhMaxValue,
-                PhMinValue = model.PhMinValue,
-                WaterLevelMaxValue = model.WaterLevelMaxValue,
-                WaterLevelMinValue = model.WaterLevelMinValue,
-                TemperatureMaxValue = model.TemperatureMaxValue,
-                TemperatureMinValue = model.TemperatureMinValue,
-                Users = new List<UserPoolAssociation>()
-            };
+            Pool pool = mapper.Map<Pool>(model);
 
             pool.Users.Add(new UserPoolAssociation
             {
@@ -70,11 +61,10 @@ namespace Poseidon.Services
 
         public PaginatedElement<Pool> Get(IFilter<Pool> filter, int rowsPerPage, int pageNumber, User user = null, string role = null)
         {
-            //if(user != null)
-            //{
-            //    ((IdentityPoolFilter)filter).Role = role;
-            //    ((IdentityPoolFilter)filter).User = user;
-            //}
+            if(user != null)
+            {
+                filter = new IdentityPoolFilter(filter, user);
+            }
 
             IEnumerable<Pool> alarms = poolRepository.Get(filter, rowsPerPage, pageNumber);
             int totalElementCount = poolRepository.Count(filter);
@@ -83,7 +73,7 @@ namespace Poseidon.Services
             {
                 TotalElementCount = totalElementCount,
                 Elements = alarms,
-                PageCount = 0
+                PageCount = RestApiHelper.GetPageCount(totalElementCount, rowsPerPage)
             };
         }
     }

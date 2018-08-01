@@ -7,16 +7,7 @@ namespace Poseidon.Filters
     {
         public AlarmState? State { get; set; }
         public AlarmType? Type { get; set; }
-
-        public override object Clone()
-        {
-            AlarmFilter filter = base.Clone() as AlarmFilter;
-            filter.State = State;
-            filter.Type = Type;
-
-            return filter;
-        }
-
+        
         public override IQueryable<Alarm> Filter(IQueryable<Alarm> source)
         {
             if (State.HasValue)

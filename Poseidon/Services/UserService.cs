@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Poseidon.Configuration;
 using Poseidon.Dtos;
+using Poseidon.Exceptions;
 using Poseidon.Models;
 using System;
 using System.Collections.Generic;
@@ -45,7 +46,7 @@ namespace Poseidon.Services
             claims.Add(new Claim(ClaimTypes.Email, user.Email));
 
             var checkPassword = await signInManager.CheckPasswordSignInAsync(user, credentials.Password, false);
-            if (!checkPassword.Succeeded) throw new Exception();
+            if (!checkPassword.Succeeded) throw new InvalidCredentialsException("Email or Password incorrect");
             
             var securityKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(signingKeySettings.SigningKey));
             var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha512);
@@ -65,7 +66,7 @@ namespace Poseidon.Services
                 NormalizedUserName = model.Email.ToUpper()
             }, model.Password);
 
-            if (!userResult.Succeeded) throw new Exception();
+            if (!userResult.Succeeded) throw new SignInException("Error while registring the user");
 
             User user = await userManager.FindByEmailAsync(model.Email);
             
@@ -76,7 +77,7 @@ namespace Poseidon.Services
 
             IdentityResult roleResult = await userManager.AddToRoleAsync(user, Roles.SysAdmin);
 
-            if (!roleResult.Succeeded) throw new Exception();
+            if (!roleResult.Succeeded) throw new SignInException("Error on assigning role to the user");
 
             return await Login(new Credentials { Email = model.Email, Password = model.Password });
         }

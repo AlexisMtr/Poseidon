@@ -7,16 +7,7 @@ namespace Poseidon.Filters
     {
         public DateTime? Before { get; set; }
         public DateTime? After { get; set; }
-
-        public virtual object Clone()
-        {
-            return new TimeFilter<T>
-            {
-                Before = Before,
-                After = After
-            };
-        }
-
+        
         public virtual IQueryable<T> Filter(IQueryable<T> source)
         {
             if (Before.HasValue)

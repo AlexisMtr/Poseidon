@@ -1,4 +1,5 @@
 ﻿using Poseidon.Filters;
+using Poseidon.Helpers;
 using Poseidon.Models;
 using Poseidon.Repositories;
 using System;
@@ -29,7 +30,7 @@ namespace Poseidon.Services
             {
                 TotalElementCount = totalElementCount,
                 Elements = alarms,
-                PageCount = 0
+                PageCount = RestApiHelper.GetPageCount(totalElementCount, rowsPerPage)
             };
         }
 

@@ -103,7 +103,7 @@ namespace Poseidon
             
             app.UseDeveloperExceptionPage();
             app.UseAuthentication();
-
+            
             app.UseCors(policy =>
             {
                 policy.AllowAnyOrigin();

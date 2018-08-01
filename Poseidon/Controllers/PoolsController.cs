@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Poseidon.Attributes;
 using Poseidon.Dtos;
 using Poseidon.Filters;
+using Poseidon.Helpers;
 using Poseidon.Models;
 using Poseidon.Services;
 using System.Collections.Generic;
@@ -42,7 +43,11 @@ namespace Poseidon.Controllers
             User user = await userManager.FindByEmailAsync(userEmail);
 
             PaginatedElement<Pool> pools = poolService.Get(filter, rowsPerPage, pageNumber, user);
-            return Ok(mapper.Map<PaginatedDto<PoolDto>>(pools));
+
+            PaginatedDto<PoolDto> dto = mapper.Map<PaginatedDto<PoolDto>>(pools);
+            dto.NextPageUrl = HttpContext.GetNextPageUrl(pageNumber, rowsPerPage, pageNumber < dto.PageCount);
+
+            return Ok(dto);
         }
 
         [HttpGet("{id}")]
@@ -66,7 +71,11 @@ namespace Poseidon.Controllers
         public IActionResult GetTelemetryHistory([FromRoute]int id, [FromQuery]TelemetryFilter filter, int rowsPerPage = 20, int pageNumber = 1)
         {
             PaginatedElement<Telemetry> telemetries = telemetryService.GetByPool(id, filter, rowsPerPage, pageNumber);
-            return Ok(mapper.Map<PaginatedDto<TelemetryDto>>(telemetries));
+
+            PaginatedDto<TelemetryDto> dto = mapper.Map<PaginatedDto<TelemetryDto>>(telemetries);
+            dto.NextPageUrl = HttpContext.GetNextPageUrl(pageNumber, rowsPerPage, pageNumber < dto.PageCount);
+
+            return Ok(dto);
         }
 
         [HttpGet("{id}/telemetry/forecast")]
@@ -81,7 +90,11 @@ namespace Poseidon.Controllers
         public IActionResult GetAlarms([FromRoute]int id, [FromQuery]AlarmFilter filter, [FromQuery]int rowsPerPage = 20, [FromQuery]int pageNumber = 1)
         {
             PaginatedElement<Alarm> alarms = alarmService.GetByPool(id, filter, rowsPerPage, pageNumber);
-            return Ok(mapper.Map<PaginatedDto<AlarmDto>>(alarms));
+
+            PaginatedDto<AlarmDto> dto = mapper.Map<PaginatedDto<AlarmDto>>(alarms);
+            dto.NextPageUrl = HttpContext.GetNextPageUrl(pageNumber, rowsPerPage, pageNumber < dto.PageCount);
+
+            return Ok(dto);
         }
 
         [HttpPost]

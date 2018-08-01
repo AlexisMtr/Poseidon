@@ -13,13 +13,13 @@ namespace Poseidon.Configuration
             Database.EnsureCreated();
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder builder)
         {
-            modelBuilder.Entity<Pool>()
+            builder.Entity<Pool>()
                 .HasIndex(e => e.DeviceId)
                 .IsUnique();
             
-            base.OnModelCreating(modelBuilder);
+            base.OnModelCreating(builder);
         }
         
         public DbSet<Pool> Pools { get; set; }

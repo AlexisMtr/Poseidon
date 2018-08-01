@@ -1,4 +1,5 @@
 ﻿using Poseidon.Filters;
+using Poseidon.Helpers;
 using Poseidon.Models;
 using Poseidon.Repositories;
 using System.Collections.Generic;
@@ -44,7 +45,7 @@ namespace Poseidon.Services
             {
                 TotalElementCount = totalElementCount,
                 Elements = telemetries,
-                PageCount = 0
+                PageCount = RestApiHelper.GetPageCount(totalElementCount, rowsPerPage)
             };
         }
     }

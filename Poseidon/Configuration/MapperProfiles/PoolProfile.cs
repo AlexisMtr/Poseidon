@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Poseidon.Dtos;
 using Poseidon.Models;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Poseidon.Configuration.MapperProfiles
@@ -18,6 +19,9 @@ namespace Poseidon.Configuration.MapperProfiles
                 .ForMember(d => d.LastTemperature, opt => opt.MapFrom(s => s.Telemetries.OrderBy(e => e.DateTime).LastOrDefault(e => e.Type == TelemetryType.Temperature).Value));
 
             CreateMap<PaginatedElement<Pool>, PaginatedDto<PoolDto>>();
+
+            CreateMap<PoolCreationDto, Pool>()
+                .ForMember(d => d.Users, opt => opt.UseValue(new List<UserPoolAssociation>()));
         }
     }
 }

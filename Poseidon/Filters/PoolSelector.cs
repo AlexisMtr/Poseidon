@@ -11,12 +11,7 @@ namespace Poseidon.Filters
         {
             this.userId = userId;
         }
-
-        public object Clone()
-        {
-            return new PoolSelector(userId);
-        }
-
+        
         public IQueryable<Pool> Filter(IQueryable<Pool> source)
         {
             return source.Where(e => e.Users.Select(u => u.User.Id).Contains(userId));
