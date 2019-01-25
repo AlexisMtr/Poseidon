@@ -5,6 +5,9 @@ using Poseidon.Services;
 using Poseidon.Models;
 using AutoMapper;
 using Poseidon.Dtos;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
+using System.Threading.Tasks;
 
 namespace Poseidon.Controllers
 {
@@ -14,18 +17,23 @@ namespace Poseidon.Controllers
     {
         private readonly AlarmService alarmService;
         private readonly IMapper mapper;
+        private readonly UserManager<User> userManager;
 
-        public AlarmsController(AlarmService alarmService, IMapper mapper)
+        public AlarmsController(AlarmService alarmService, IMapper mapper, UserManager<User> userManager)
         {
             this.alarmService = alarmService;
             this.mapper = mapper;
+            this.userManager = userManager;
         }
 
         [HttpPut("{id}/ack")]
         [ProducesResponseType((int)HttpStatusCode.OK)]
-        public IActionResult Ack(int id)
+        public async Task<IActionResult> Ack(int id)
         {
-            Alarm alarm = alarmService.Ack(id);
+            string userEmail = User.FindFirst(ClaimTypes.Email).Value;
+            User user = await userManager.FindByEmailAsync(userEmail);
+
+            Alarm alarm = alarmService.Ack(id, user);
             return Ok(mapper.Map<AlarmDto>(alarm));
         }
     }

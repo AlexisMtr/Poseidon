@@ -46,6 +46,7 @@ namespace Poseidon
             services.AddScoped<IAlarmRepository, AlarmRepository>();
             services.AddScoped<IPoolRepository, PoolRepository>();
             services.AddScoped<ITelemetryRepository, TelemetryRepository>();
+            services.AddScoped<IDeviceRepository, DeviceRepository>();
             services.AddScoped<UserManager<User>>();
             services.AddScoped<RoleManager<IdentityRole>>();
             services.AddScoped<SignInManager<User>>();
@@ -54,6 +55,7 @@ namespace Poseidon
             services.AddScoped<PoolService>();
             services.AddScoped<TelemetryService>();
             services.AddScoped<UserService>();
+            services.AddScoped<DeviceService>();
                         
             services.AddAuthentication(options => options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
@@ -92,6 +94,7 @@ namespace Poseidon
                 config.AddProfile<PoolProfile>();
                 config.AddProfile<AlarmProfile>();
                 config.AddProfile<TelemetryProfile>();
+                config.AddProfile<DeviceProfile>();
             });
         }
 

@@ -112,10 +112,35 @@ namespace Poseidon.Controllers
         [HttpPut("{id}")]
         [MultipleAuthorize(new string[] { Roles.SysAdmin, Roles.Administrator })]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PoolDto))]
-        public IActionResult Put([FromRoute]int id, [FromBody]PoolCreationDto model)
+        public async Task<IActionResult> Put([FromRoute]int id, [FromBody]PoolCreationDto model)
         {
-            Pool pool = poolService.Update(id, model);
+            string userEmail = User.FindFirst(ClaimTypes.Email).Value;
+            User user = await userManager.FindByEmailAsync(userEmail);
+
+            Pool pool = poolService.Update(id, model, user);
             return Ok(mapper.Map<PoolDto>(pool));
+        }
+
+        [HttpPut("{poolId}/association/{deviceId}")]
+        [MultipleAuthorize(new string[] { Roles.SysAdmin, Roles.Administrator })]
+        public async Task<IActionResult> Associate(int poolId, string deviceId)
+        {
+            string userEmail = User.FindFirst(ClaimTypes.Email).Value;
+            User user = await userManager.FindByEmailAsync(userEmail);
+
+            poolService.Associate(poolId, deviceId, user);
+            return Ok();
+        }
+
+        [HttpDelete("{poolId}/association")]
+        [MultipleAuthorize(new string[] { Roles.SysAdmin, Roles.Administrator })]
+        public async Task<IActionResult> Dissociate(int poolId)
+        {
+            string userEmail = User.FindFirst(ClaimTypes.Email).Value;
+            User user = await userManager.FindByEmailAsync(userEmail);
+
+            poolService.Dissociate(poolId, user);
+            return Ok();
         }
     }
 }

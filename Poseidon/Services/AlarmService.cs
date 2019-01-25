@@ -1,4 +1,5 @@
-﻿using Poseidon.Filters;
+﻿using Poseidon.Exceptions;
+using Poseidon.Filters;
 using Poseidon.Helpers;
 using Poseidon.Models;
 using Poseidon.Repositories;
@@ -16,9 +17,17 @@ namespace Poseidon.Services
             this.alarmRepository = alarmRepository;
         }
 
-        public Alarm Get(int id)
+        public Alarm Get(int id, User user)
         {
-            return alarmRepository.GetById(id);
+            IFilter<Alarm> filter = new AlarmFilter();
+            if(user != null)
+            {
+
+            }
+            Alarm alarm = alarmRepository.GetById(id, filter);
+            if (alarm == null) throw new NotFoundException(typeof(Alarm));
+
+            return alarm;
         }
 
         public PaginatedElement<Alarm> GetByPool(int id, IFilter<Alarm> filter, int rowsPerPage, int pageNumber)
@@ -34,9 +43,9 @@ namespace Poseidon.Services
             };
         }
 
-        public Alarm Ack(int id)
+        public Alarm Ack(int id, User user)
         {
-            Alarm alarm = Get(id);
+            Alarm alarm = Get(id, user);
             alarm.Ack = true;
             alarm.AcknowledgmentDateTime = DateTime.UtcNow;
             alarmRepository.SaveChanges();

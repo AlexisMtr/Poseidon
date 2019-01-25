@@ -51,9 +51,10 @@ namespace Poseidon.Repositories.SQL
                 .Where(filter ?? new PoolFilter());
         }
 
-        public Pool GetById(int id)
+        public Pool GetById(int id, IFilter<Pool> filter)
         {
             return context.Pools
+                .Where(filter ?? new PoolFilter())
                 .Include(e => e.Telemetries)
                 .FirstOrDefault(e => e.Id == id);
         }

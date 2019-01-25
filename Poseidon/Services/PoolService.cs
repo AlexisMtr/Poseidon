@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Poseidon.Dtos;
+using Poseidon.Exceptions;
 using Poseidon.Filters;
 using Poseidon.Helpers;
 using Poseidon.Models;
@@ -12,16 +13,27 @@ namespace Poseidon.Services
     {
         private readonly IPoolRepository poolRepository;
         private readonly IMapper mapper;
+        private readonly DeviceService deviceService;
 
-        public PoolService(IPoolRepository poolRepository, IMapper mapper)
+        public PoolService(IPoolRepository poolRepository, IMapper mapper, DeviceService deviceService)
         {
             this.poolRepository = poolRepository;
             this.mapper = mapper;
+            this.deviceService = deviceService;
         }
 
-        public Pool Get(int poolId)
+        public Pool Get(int poolId, User user = null)
         {
-            return poolRepository.GetById(poolId);
+            IFilter<Pool> filter = new PoolFilter();
+            if (user != null)
+            {
+                filter = new IdentityPoolFilter(filter, user);
+            }
+
+            Pool pool = poolRepository.GetById(poolId, filter);
+            if (pool == null) throw new NotFoundException(typeof(Pool));
+
+            return pool;
         }
 
         public Pool Add(PoolCreationDto model, User user)
@@ -40,14 +52,13 @@ namespace Poseidon.Services
             return pool;
         }
 
-        public Pool Update(int poolId, PoolCreationDto model)
+        public Pool Update(int poolId, PoolCreationDto model, User user)
         {
-            Pool pool = Get(poolId);
+            Pool pool = Get(poolId, user);
 
             pool.Name = model.Name;
             pool.Latitude = model.Latitude;
             pool.Longitude = model.Longitude;
-            pool.DeviceId = model.DeviceId;
             pool.PhMaxValue = model.PhMaxValue;
             pool.PhMinValue = model.PhMinValue;
             pool.WaterLevelMaxValue = model.WaterLevelMaxValue;
@@ -59,7 +70,7 @@ namespace Poseidon.Services
             return pool;
         }
 
-        public PaginatedElement<Pool> Get(IFilter<Pool> filter, int rowsPerPage, int pageNumber, User user = null, string role = null)
+        public PaginatedElement<Pool> Get(IFilter<Pool> filter, int rowsPerPage, int pageNumber, User user = null)
         {
             if(user != null)
             {
@@ -75,6 +86,22 @@ namespace Poseidon.Services
                 Elements = alarms,
                 PageCount = RestApiHelper.GetPageCount(totalElementCount, rowsPerPage)
             };
+        }
+
+        public void Associate(int poolId, string deviceId, User user)
+        {
+            Device device = deviceService.Get(deviceId);
+            Pool pool = Get(poolId, user);
+
+            pool.Device = device;
+            poolRepository.SaveChanges();
+        }
+
+        public void Dissociate(int poolId, User user)
+        {
+            Pool pool = Get(poolId, user);
+            pool.Device = null;
+            poolRepository.SaveChanges();
         }
     }
 }

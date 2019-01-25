@@ -5,7 +5,6 @@
         public string Name { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
-        public string DeviceId { get; set; }
         public double TemperatureMinValue { get; set; }
         public double TemperatureMaxValue { get; set; }
         public double PhMinValue { get; set; }

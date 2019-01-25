@@ -47,9 +47,10 @@ namespace Poseidon.Repositories.SQL
                 .Where(filter ?? new TelemetryFilter());
         }
 
-        public Telemetry GetById(int id)
+        public Telemetry GetById(int id, IFilter<Telemetry> filter)
         {
             return context.Telemetries
+                .Where(filter ?? new TelemetryFilter())
                 .FirstOrDefault(e => e.Id == id);
         }
 

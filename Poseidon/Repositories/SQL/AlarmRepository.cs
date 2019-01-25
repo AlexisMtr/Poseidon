@@ -47,9 +47,11 @@ namespace Poseidon.Repositories.SQL
             return context.Alarms.Where(filter ?? new AlarmFilter());
         }
 
-        public Alarm GetById(int id)
+        public Alarm GetById(int id, IFilter<Alarm> filter)
         {
-            return context.Alarms.FirstOrDefault(e => e.Id.Equals(id));
+            return context.Alarms
+                .Where(filter ?? new AlarmFilter())
+                .FirstOrDefault(e => e.Id == id);
         }
 
         public IEnumerable<Alarm> GetByPool(int poolId, IFilter<Alarm> filter, int rowsPerPage, int pageNumber, params Expression<Func<Alarm, object>>[] includes)

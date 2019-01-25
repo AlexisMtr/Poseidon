@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Poseidon.Repositories
 {
-    public interface IPoolRepository : IRepository<Pool>
+    public interface IPoolRepository : IRepository<Pool, int>
     {
         IEnumerable<Pool> Get(IFilter<Pool> filter, int rowsPerPage, int pageNumber);
     }

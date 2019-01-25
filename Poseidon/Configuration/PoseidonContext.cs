@@ -16,7 +16,7 @@ namespace Poseidon.Configuration
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<Pool>()
-                .HasIndex(e => e.DeviceId)
+                .HasIndex("DeviceId")
                 .IsUnique();
             
             base.OnModelCreating(builder);
@@ -25,7 +25,7 @@ namespace Poseidon.Configuration
         public DbSet<Pool> Pools { get; set; }
         public DbSet<Alarm> Alarms { get; set; }
         public DbSet<Telemetry> Telemetries { get; set; }
-        public DbSet<Season> Seasons { get; set; }
+        public DbSet<Device> Devices { get; set; }
         public DbSet<UserPoolAssociation> UserPoolAssociations { get; set; }
     }
 }
