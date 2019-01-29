@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.IO;
 using Newtonsoft.Json;
 using System;
+using System.Net;
 
 namespace PoseidonFA
 {
@@ -19,15 +20,22 @@ namespace PoseidonFA
     {
         [FunctionName("Telemetries")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)]HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)]HttpRequest req,
             ILogger log)
         {
-            log.LogInformation("C# HTTP trigger function processed a request.");
+            ProcessDataService service = null;
+            try
+            {
+                MapperConfiguration.ConfigureMapper();
+                DependencyInjection.InitializeContainer(log);
 
-            MapperConfiguration.ConfigureMapper();
-            DependencyInjection.InitializeContainer(log);
-
-            ProcessDataService service = DependencyInjection.ServiceProvider.GetService<ProcessDataService>();
+                service = DependencyInjection.ServiceProvider.GetService<ProcessDataService>();
+            }
+            catch (Exception e)
+            {
+                log.LogError(e.Message, e);
+                return new StatusCodeResult((int)HttpStatusCode.InternalServerError);
+            }
 
             string poolId = req.Query
                 .FirstOrDefault(q => string.Compare(q.Key, "poolid", true) == 0).Value;
