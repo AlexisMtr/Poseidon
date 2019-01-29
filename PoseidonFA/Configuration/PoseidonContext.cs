@@ -1,14 +1,14 @@
-﻿using PoseidonFA.Models;
-using System.Data.Entity;
+﻿using Microsoft.EntityFrameworkCore;
+using PoseidonFA.Models;
 
 namespace PoseidonFA.Configuration
 {
     public class PoseidonContext : DbContext
     {
-        public PoseidonContext()
-            : base("name=DefaultConnection")
+        public PoseidonContext(DbContextOptions<PoseidonContext> options)
+            : base(options)
         {
-
+            Database.EnsureCreated();
         }
 
         public DbSet<Telemetry> Telemetries { get; set; }

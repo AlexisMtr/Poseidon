@@ -7,7 +7,7 @@ namespace PoseidonFA.Models
     public class Telemetry
     {
         public int Id { get; set; }
-        public DateTime DateTime { get; set; }
+        public DateTimeOffset DateTime { get; set; }
         [ForeignKey(nameof(PoolId))]
         public Pool Pool { get; set; }
         public TelemetryType Type { get; set; }
