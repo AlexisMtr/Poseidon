@@ -4,7 +4,7 @@ using PoseidonFA.Dtos;
 using System.Collections.Generic;
 using System;
 using AutoMapper;
-using System.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace PoseidonFA.Services
 {
@@ -22,7 +22,7 @@ namespace PoseidonFA.Services
             this.alarmService = alarmService;
             this.telemetryService = telemetryService;
             this.log = log;
-            this.batteryLevelAlarm = double.Parse(ConfigurationManager.AppSettings["BatteryLevelAlarm"]);
+            this.batteryLevelAlarm = double.Parse(Environment.GetEnvironmentVariable("BatteryLevelAlarm"));
         }
 
         public void Process(int poolId, TelemetriesSetDto data)
@@ -30,8 +30,8 @@ namespace PoseidonFA.Services
             Pool pool = poolService.Get(poolId);
             if (pool == null)
             {
-                log.Error($"Pool with Id {poolId} not found");
-                return;
+                log.LogError($"Pool with Id {poolId} not found");
+                throw new Exception($"Pool not found");
             };
 
             IEnumerable<Telemetry> telemetries = Mapper.Map<IEnumerable<Telemetry>>(data.Telemetries);
@@ -79,7 +79,7 @@ namespace PoseidonFA.Services
             CheckForAlarm(pool, telemetry, minValue, maxValue, alarmType);
 
             telemetry.Pool = pool;
-            telemetry.DateTime = DateTime.UtcNow;
+            telemetry.DateTime = DateTimeOffset.UtcNow;
             telemetryService.Add(telemetry);
         }
 
@@ -90,7 +90,7 @@ namespace PoseidonFA.Services
             alarmService.Add(new Alarm
             {
                 Pool = pool,
-                DateTime = DateTime.UtcNow,
+                DateTime = DateTimeOffset.UtcNow,
                 Description = $"Generated on {DateTime.UtcNow} by Poseidon",
                 AlarmType = type,
                 Ack = false

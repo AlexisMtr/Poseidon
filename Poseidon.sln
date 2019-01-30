@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{41675DFC-8307-469C-979A-B2BFA1B09E11}"
 	ProjectSection(SolutionItems) = preProject
 		azuredeploy.json = azuredeploy.json
+		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
 Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "PoseidonRG", "PoseidonRG\PoseidonRG.deployproj", "{3CB66D19-A331-4DC8-A5A1-786E04D9D9F1}"

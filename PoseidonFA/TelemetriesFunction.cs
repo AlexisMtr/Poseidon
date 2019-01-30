@@ -1,39 +1,66 @@
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Azure.WebJobs.Host;
 using PoseidonFA.Dtos;
-using Autofac;
 using PoseidonFA.Services;
 using PoseidonFA.Configuration;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using System.IO;
+using Newtonsoft.Json;
+using System;
+using System.Net;
 
 namespace PoseidonFA
 {
     public static class TelemetriesFunction
     {
         [FunctionName("Telemetries")]
-        public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)]HttpRequestMessage req, TraceWriter log)
+        public static async Task<IActionResult> Run(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)]HttpRequest req,
+            ILogger log)
         {
-            log.Info("C# HTTP trigger function processed a request.");
-
-            MapperConfiguration.ConfigureMapper();
-            DependencyInjection.InitializeContainer(new TraceWriterWrapper(log));
-            using (var scope = DependencyInjection.Container.BeginLifetimeScope())
+            ProcessDataService service = null;
+            try
             {
-                var service = scope.Resolve<ProcessDataService>();
+                MapperConfiguration.ConfigureMapper();
+                DependencyInjection.InitializeContainer(log);
 
-                string poolId = req.GetQueryNameValuePairs()
-                    .FirstOrDefault(q => string.Compare(q.Key, "poolid", true) == 0).Value;
-
-                TelemetriesSetDto payload = await req.Content.ReadAsAsync<TelemetriesSetDto>();
-
-                service.Process(int.Parse(poolId), payload);
-                return req.CreateErrorResponse(HttpStatusCode.OK, "");
+                service = DependencyInjection.ServiceProvider.GetService<ProcessDataService>();
+            }
+            catch (Exception e)
+            {
+                log.LogError(e.Message, e);
+                return new StatusCodeResult((int)HttpStatusCode.InternalServerError);
             }
 
+            string poolId = req.Query
+                .FirstOrDefault(q => string.Compare(q.Key, "poolid", true) == 0).Value;
+
+            if (string.IsNullOrEmpty(poolId)) return new BadRequestObjectResult(new
+            {
+                Message = $"Parameter {nameof(poolId)} must be define"
+            });
+
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            TelemetriesSetDto payload = JsonConvert.DeserializeObject<TelemetriesSetDto>(requestBody);
+
+            try
+            {
+                service.Process(int.Parse(poolId), payload);
+                return new OkResult();
+            }
+            catch (Exception e)
+            {
+                return new BadRequestObjectResult(new
+                {
+                    Message = "Error while processing telemetries",
+                    InnerMessage = e.Message
+                });
+            }
         }
     }
 }
