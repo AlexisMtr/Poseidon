@@ -9,7 +9,7 @@ namespace Poseidon.Models
         public Pool Pool { get; set; }
         public string Description { get; set; }
         public bool Ack { get; set; }
-        public DateTime? AcknowledgmentDateTime { get; set; }
+        public DateTimeOffset? AcknowledgmentDateTime { get; set; }
         public AlarmType AlarmType { get; set; }
     }
 }

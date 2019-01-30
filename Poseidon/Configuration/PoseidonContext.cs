@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Poseidon.Models;
 
 namespace Poseidon.Configuration
@@ -18,6 +19,13 @@ namespace Poseidon.Configuration
             builder.Entity<Pool>()
                 .HasIndex("DeviceId")
                 .IsUnique();
+
+            builder.Entity<DeviceConfiguration>()
+                .Property(e => e.ConfigurationUpdateCheckDelay)
+                .HasConversion<TimeSpanToTicksConverter>();
+            builder.Entity<DeviceConfiguration>()
+                .Property(e => e.PublicationDelay)
+                .HasConversion<TimeSpanToTicksConverter>();
             
             base.OnModelCreating(builder);
         }
