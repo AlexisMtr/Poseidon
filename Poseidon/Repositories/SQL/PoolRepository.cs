@@ -39,6 +39,8 @@ namespace Poseidon.Repositories.SQL
             int skip = Math.Max(0, pageNumber - 1) * rowsPerPage;
 
             return context.Pools
+                .Include(e => e.Device)
+                .Include(e => e.Alarms)
                 .Where(filter ?? new PoolFilter())
                 .OrderBy(e => e.Name)
                 .Skip(skip)
@@ -48,12 +50,16 @@ namespace Poseidon.Repositories.SQL
         public IQueryable<Pool> Get(IFilter<Pool> filter)
         {
             return context.Pools
+                .Include(e => e.Device)
+                .Include(e => e.Alarms)
                 .Where(filter ?? new PoolFilter());
         }
 
         public Pool GetById(int id, IFilter<Pool> filter)
         {
             return context.Pools
+                .Include(e => e.Device)
+                .Include(e => e.Alarms)
                 .Where(filter ?? new PoolFilter())
                 .Include(e => e.Telemetries)
                 .FirstOrDefault(e => e.Id == id);

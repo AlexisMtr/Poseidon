@@ -16,7 +16,8 @@ namespace Poseidon.Configuration.MapperProfiles
                 .ForMember(d => d.LastBatteryLevel, opt => opt.MapFrom(s => s.Telemetries.OrderBy(e => e.DateTime).LastOrDefault(e => e.Type == TelemetryType.Battery).Value))
                 .ForMember(d => d.LastWaterLevel, opt => opt.MapFrom(s => s.Telemetries.OrderBy(e => e.DateTime).LastOrDefault(e => e.Type == TelemetryType.Level).Value))
                 .ForMember(d => d.LastPh, opt => opt.MapFrom(s => s.Telemetries.OrderBy(e => e.DateTime).LastOrDefault(e => e.Type == TelemetryType.Ph).Value))
-                .ForMember(d => d.LastTemperature, opt => opt.MapFrom(s => s.Telemetries.OrderBy(e => e.DateTime).LastOrDefault(e => e.Type == TelemetryType.Temperature).Value));
+                .ForMember(d => d.LastTemperature, opt => opt.MapFrom(s => s.Telemetries.OrderBy(e => e.DateTime).LastOrDefault(e => e.Type == TelemetryType.Temperature).Value))
+                .ForMember(d => d.DeviceId, opt => opt.MapFrom(s => s.Device.DeviceId));
 
             CreateMap<PaginatedElement<Pool>, PaginatedDto<PoolDto>>();
 

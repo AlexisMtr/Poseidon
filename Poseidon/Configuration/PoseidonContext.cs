@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Poseidon.Models;
+using System;
 
 namespace Poseidon.Configuration
 {
@@ -22,10 +22,10 @@ namespace Poseidon.Configuration
 
             builder.Entity<DeviceConfiguration>()
                 .Property(e => e.ConfigurationUpdateCheckDelay)
-                .HasConversion<TimeSpanToTicksConverter>();
+                .HasConversion((e) => e.Ticks, e => TimeSpan.FromTicks(e));
             builder.Entity<DeviceConfiguration>()
                 .Property(e => e.PublicationDelay)
-                .HasConversion<TimeSpanToTicksConverter>();
+                .HasConversion((e) => e.Ticks, e => TimeSpan.FromTicks(e));
             
             base.OnModelCreating(builder);
         }
