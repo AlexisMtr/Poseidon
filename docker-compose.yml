@@ -3,27 +3,27 @@ version: '3'
 services:
   api:
     build: ./Poseidon
-    image: poseidon-api:0.1
+    image: poseidon-api
     environment:
       - "IssuerSigningKey:SigningKey=0439C4537C914A86BAD8A1E8335CE41C"
       - "ConnectionStrings:DefaultConnection=Server=tcp:database,1433;Initial Catalog=Poseidon;Integrated Security=False;Connect Timeout=300;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;User ID=SA;Password=YourStrong!Passw0rd"
     ports:
-      - "5000:80"
+      - "8081:80"
     networks:
-      - poseidon-net
+      - api-net
     depends_on:
       - database
 
-  device-endpoint:
+  function:
     build: ./PoseidonFA
-    image: poseidon-function:0.1
+    image: poseidon-function
     environment:
       - "BatteryLevelAlarm=20"
       - "ConnectionStrings:DefaultConnection=Server=tcp:database,1433;Initial Catalog=Poseidon;Integrated Security=False;Connect Timeout=300;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;User ID=SA;Password=YourStrong!Passw0rd"
     ports:
-      - "8081:80"
+      - "8082:80"
     networks: 
-      - poseidon-net
+      - function-net
     depends_on:
       - database
 
@@ -35,12 +35,14 @@ services:
     ports:
       - "1433:1433"
     networks:
-      - poseidon-net
+      - api-net
+      - function-net
     volumes:
       - "db-data:/var/opt/mssql"
 
 networks:
-  poseidon-net:
+  api-net:
+  function-net:
 
 volumes:
   db-data:
