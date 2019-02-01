@@ -26,6 +26,12 @@ namespace Poseidon.Configuration
             builder.Entity<DeviceConfiguration>()
                 .Property(e => e.PublicationDelay)
                 .HasConversion((e) => e.Ticks, e => TimeSpan.FromTicks(e));
+
+            builder.Entity<IdentityRole>().HasData(
+                new IdentityRole { Name = Models.Roles.SysAdmin },
+                new IdentityRole { Name = Models.Roles.Administrator },
+                new IdentityRole { Name = Models.Roles.User }
+            );
             
             base.OnModelCreating(builder);
         }

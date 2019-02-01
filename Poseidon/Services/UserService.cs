@@ -69,13 +69,7 @@ namespace Poseidon.Services
             if (!userResult.Succeeded) throw new SignInException("Error while registring the user");
 
             User user = await userManager.FindByEmailAsync(model.Email);
-            
-            if(!await roleManager.RoleExistsAsync(Roles.SysAdmin))
-            {
-                await roleManager.CreateAsync(new IdentityRole { Name = Roles.SysAdmin });
-            }
-
-            IdentityResult roleResult = await userManager.AddToRoleAsync(user, Roles.SysAdmin);
+            IdentityResult roleResult = await userManager.AddToRoleAsync(user, model.Role);
 
             if (!roleResult.Succeeded) throw new SignInException("Error on assigning role to the user");
 
