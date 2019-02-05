@@ -30,10 +30,12 @@ namespace PoseidonFA.Configuration
             builder.RegisterType<PoolRepository>().As<IPoolRepository, PoolRepository>().InstancePerLifetimeScope();
             builder.RegisterType<AlarmRepository>().As<IAlarmRepository, AlarmRepository>().InstancePerLifetimeScope();
             builder.RegisterType<TelemetryRepository>().As<ITelemetryRepository, TelemetryRepository>().InstancePerLifetimeScope();
+            builder.RegisterType<DeviceConfigurationRepository>().As<IDeviceConfigurationRepository, DeviceConfigurationRepository>().InstancePerLifetimeScope();
 
             builder.RegisterType<PoolService>().InstancePerLifetimeScope();
             builder.RegisterType<AlarmService>().InstancePerLifetimeScope();
             builder.RegisterType<TelemetryService>().InstancePerLifetimeScope();
+            builder.RegisterType<DeviceConfigurationService>().InstancePerLifetimeScope();
             builder.RegisterType<ProcessDataService>().InstancePerLifetimeScope();
 
             IContainer container = builder.Build();

@@ -16,5 +16,10 @@ namespace PoseidonFA.Services
         {
             return poolRepository.Get(id);
         }
+
+        public Pool GetByDeviceId(string deviceId)
+        {
+            return poolRepository.GetByDevice(deviceId);
+        }
     }
 }
