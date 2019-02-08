@@ -1,12 +1,10 @@
-﻿using Autofac;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PoseidonFA.Repositories;
 using PoseidonFA.Repositories.SQL;
 using PoseidonFA.Services;
 using System;
-using Microsoft.EntityFrameworkCore;
-using Autofac.Extensions.DependencyInjection;
 
 namespace PoseidonFA.Configuration
 {
@@ -19,27 +17,23 @@ namespace PoseidonFA.Configuration
             IServiceCollection serviceCollection = new ServiceCollection();
             serviceCollection.AddLogging();
 
+            serviceCollection.AddSingleton(typeof(ILogger), logger);
+
             string dbConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings:DefaultConnection");
             serviceCollection.AddDbContext<PoseidonContext>(opt => opt.UseSqlServer(dbConnectionString));
 
-            ContainerBuilder builder = new ContainerBuilder();
-            builder.Populate(serviceCollection);
+            serviceCollection.AddScoped<IPoolRepository, PoolRepository>();
+            serviceCollection.AddScoped<IAlarmRepository, AlarmRepository>();
+            serviceCollection.AddScoped<ITelemetryRepository, TelemetryRepository>();
+            serviceCollection.AddScoped<IDeviceConfigurationRepository, DeviceConfigurationRepository>();
 
-            builder.RegisterInstance(logger).As<ILogger>().SingleInstance();
+            serviceCollection.AddScoped<PoolService>();
+            serviceCollection.AddScoped<AlarmService>();
+            serviceCollection.AddScoped<TelemetryService>();
+            serviceCollection.AddScoped<DeviceConfigurationService>();
+            serviceCollection.AddScoped<ProcessDataService>();
 
-            builder.RegisterType<PoolRepository>().As<IPoolRepository, PoolRepository>().InstancePerLifetimeScope();
-            builder.RegisterType<AlarmRepository>().As<IAlarmRepository, AlarmRepository>().InstancePerLifetimeScope();
-            builder.RegisterType<TelemetryRepository>().As<ITelemetryRepository, TelemetryRepository>().InstancePerLifetimeScope();
-            builder.RegisterType<DeviceConfigurationRepository>().As<IDeviceConfigurationRepository, DeviceConfigurationRepository>().InstancePerLifetimeScope();
-
-            builder.RegisterType<PoolService>().InstancePerLifetimeScope();
-            builder.RegisterType<AlarmService>().InstancePerLifetimeScope();
-            builder.RegisterType<TelemetryService>().InstancePerLifetimeScope();
-            builder.RegisterType<DeviceConfigurationService>().InstancePerLifetimeScope();
-            builder.RegisterType<ProcessDataService>().InstancePerLifetimeScope();
-
-            IContainer container = builder.Build();
-            ServiceProvider = new AutofacServiceProvider(container);
+            ServiceProvider = serviceCollection.BuildServiceProvider();
         }
     }
 }

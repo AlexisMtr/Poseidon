@@ -1,18 +1,18 @@
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using PoseidonFA.Dtos;
-using PoseidonFA.Services;
-using PoseidonFA.Configuration;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using System.IO;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System;
-using System.Net;
+using PoseidonFA.Configuration;
+using PoseidonFA.Dtos;
 using PoseidonFA.Models;
+using PoseidonFA.Services;
+using System;
+using System.IO;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace PoseidonFA
 {
@@ -20,7 +20,7 @@ namespace PoseidonFA
     {
         [FunctionName("Telemetries")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "Telemetries/{deviceId}")]HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "Telemetries/{deviceId}")]HttpRequest req,
             string deviceId,
             ILogger log)
         {
@@ -31,8 +31,8 @@ namespace PoseidonFA
                 MapperConfiguration.ConfigureMapper();
                 DependencyInjection.InitializeContainer(log);
 
-                service = DependencyInjection.ServiceProvider.GetService<ProcessDataService>();
-                deviceConfigurationService = DependencyInjection.ServiceProvider.GetService<DeviceConfigurationService>();
+                service = DependencyInjection.ServiceProvider.GetRequiredService<ProcessDataService>();
+                deviceConfigurationService = DependencyInjection.ServiceProvider.GetRequiredService<DeviceConfigurationService>();
             }
             catch (Exception e)
             {
@@ -56,6 +56,8 @@ namespace PoseidonFA
                 {
                     log.LogWarning($"DeviceConfiguration {configuration.Id} is published but stay as 'unpublished' in the database");
                 }
+
+                log.LogInformation($"{DateTimeOffset.UtcNow.ToString("yyyy-MM-dd HH:mm")} - Telemetries updated for device {deviceId}");
 
                 return result;
             }

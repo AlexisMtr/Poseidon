@@ -34,10 +34,14 @@ Add the *ConnectionStrings:DefaultConnection* and *IssuerSigningKey:SigningKey* 
 *<sup>1</sup> For access to `secrets.json` right click on the project and click on `Manage User Secrets`*
 
 #### Docker
-For run the WebAPI on Docker, go in the Poseidon folder and execute
+To run the WebAPI on Docker, go in the Poseidon folder and execute
 ```bash
 $ docker build -t poseidon-api .
-$ docker run -it --rm -e "ConnectionStrings:DefaultConnection=<your_connection_string>" -e "IssuerSigningKey:SigningKey=<your_signinkey>" poseidon-api
+$ docker run -it --rm
+  -e "ConnectionStrings:DefaultConnection=<your_connection_string>"
+  -e "IssuerSigningKey:SigningKey=<your_signinkey>"
+  -p 8080:80
+  poseidon-api
 ```
 
 ### Configure PoseidonFA
@@ -48,6 +52,7 @@ VisualStudio add `local.settings.json` file to the `.gitignore` for the Function
   "IsEncrypted": false,
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "AzureWebJobsDashboard": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
     "BatteryLevelAlarm": 20
   },
@@ -57,8 +62,52 @@ VisualStudio add `local.settings.json` file to the `.gitignore` for the Function
 }
 ```
 #### Docker
-For run the FunctionApp on Docker, go in the PoseidonFA folder and execute
+To run the FunctionApp on Docker, go in the PoseidonFA folder and execute
 ```bash
 $ docker build -t poseidon-fa .
-$ docker run -it --rm -e "ConnectionStrings:DefaultConnection=<your_connection_string>" -e "BatteryLevelAlarm=20" poseidon-fa
+$ docker run -it --rm
+  -e "ConnectionStrings:DefaultConnection=<your_connection_string>"
+  -e "BatteryLevelAlarm=20"
+  -e "AzureFunctionsJobHost__Logging__Console__IsEnabled=true"
+  -e "AzureWebJobsSecretStorageType='blob'"
+  -e "AzureWebJobsStorage=<your_storage_account>"
+  -e "AzureWebJobsDashboard=<your_storage_account>"
+  -p 8081:80
+   poseidon-fa
+```
+The 3 last parameters are required to enable `AccesLevel` other than `Anonymous`  
+To find the key, explore the storage account and find the key inside blob `azure-webjobs-secrets`>`<folderId>`>`telemetries.json`
+
+### Docker-Compose
+#### Using Windows Storage Emulator (Windows OS only)
+If you are on Windows OS, you must start the Windows Storage Emulator. Don't touch any things on `docker-compose.yml` and execute
+```
+$ docker-compose up [--build]
+```
+#### Using Storage Emulator (All OS)
+If your a not on Windows OS (or you don't want to install Storage Emulator), you can use the project [Azurite](https://github.com/Azure/Azurite) which simulate the Storage Emulator (/!\ some features are not implemented). To use it, update the `docker-compose.yml` file like follow
+```yml
+services:
+  #...
+  function:
+    #...
+    environment:
+      # ...
+      - "AzureWebJobsStorage=..." # replace 'host.docker.internal' by 'storage-emulator'
+      - "AzureWebJobsDashboard=..." # replace 'host.docker.internal' by 'storage-emulator'
+    depends_on:
+      - database
+      - storage-emulator
+
+  # Add new service based on Azurite
+  storage-emulator:
+     image: arafato/azurite
+     ports:
+       - "10000:10000"
+       - "10001:10001"
+       - "10002:10002"
+     networks: 
+       - function-net
+     volumes:
+       - "function-data:/var/opt/mssql"
 ```
