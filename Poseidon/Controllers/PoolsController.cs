@@ -87,12 +87,14 @@ namespace Poseidon.Controllers
 
         [HttpGet("{id}/alarms")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PaginatedDto<AlarmDto>))]
-        public IActionResult GetAlarms([FromRoute]int id, [FromQuery]AlarmFilter filter, [FromQuery]int rowsPerPage = 20, [FromQuery]int pageNumber = 1)
+        public async Task<IActionResult> GetAlarms([FromRoute]int id, [FromQuery]AlarmFilter filter, [FromQuery]int rowsPerPage = 20, [FromQuery]int pageNumber = 1)
         {
-            PaginatedElement<Alarm> alarms = alarmService.GetByPool(id, filter, rowsPerPage, pageNumber);
+            string userEmail = User.FindFirst(ClaimTypes.Email).Value;
+            User user = await userManager.FindByEmailAsync(userEmail);
+
+            PaginatedElement<Alarm> alarms = alarmService.GetByPool(id, filter, rowsPerPage, pageNumber, user);
 
             PaginatedDto<AlarmDto> dto = mapper.Map<PaginatedDto<AlarmDto>>(alarms);
-            dto.NextPageUrl = HttpContext.GetNextPageUrl(pageNumber < dto.PageCount);
 
             return Ok(dto);
         }

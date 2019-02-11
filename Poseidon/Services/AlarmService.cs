@@ -22,7 +22,7 @@ namespace Poseidon.Services
             IFilter<Alarm> filter = new AlarmFilter();
             if(user != null)
             {
-
+                filter = new IdentityAlarmFilter(filter, user);
             }
             Alarm alarm = alarmRepository.GetById(id, filter);
             if (alarm == null) throw new NotFoundException(typeof(Alarm));
@@ -30,8 +30,12 @@ namespace Poseidon.Services
             return alarm;
         }
 
-        public PaginatedElement<Alarm> GetByPool(int id, IFilter<Alarm> filter, int rowsPerPage, int pageNumber)
+        public PaginatedElement<Alarm> GetByPool(int id, IFilter<Alarm> filter, int rowsPerPage, int pageNumber, User user = null)
         {
+            if(user != null)
+            {
+                filter = new IdentityAlarmFilter(filter, user);
+            }
             IEnumerable<Alarm> alarms = alarmRepository.GetByPool(id, filter, rowsPerPage, pageNumber);
             int totalElementCount = alarmRepository.CountByPool(id, filter);
 

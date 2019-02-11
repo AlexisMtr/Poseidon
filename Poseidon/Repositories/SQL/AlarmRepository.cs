@@ -46,12 +46,15 @@ namespace Poseidon.Repositories.SQL
 
         public IQueryable<Alarm> Get(IFilter<Alarm> filter)
         {
-            return context.Alarms.Where(filter ?? new AlarmFilter());
+            return context.Alarms
+                .Include(e => e.Pool)
+                .Where(filter ?? new AlarmFilter());
         }
 
         public Alarm GetById(int id, IFilter<Alarm> filter)
         {
             return context.Alarms
+                .Include(e => e.Pool)
                 .Where(filter ?? new AlarmFilter())
                 .FirstOrDefault(e => e.Id == id);
         }

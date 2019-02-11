@@ -15,6 +15,7 @@ using Poseidon.Models;
 using Microsoft.AspNetCore.Identity;
 using AutoMapper;
 using Poseidon.Configuration.MapperProfiles;
+using Microsoft.AspNetCore.Http;
 
 namespace Poseidon
 {
@@ -56,6 +57,8 @@ namespace Poseidon
             services.AddScoped<TelemetryService>();
             services.AddScoped<UserService>();
             services.AddScoped<DeviceService>();
+
+            services.AddScoped<IHttpContextAccessor, HttpContextAccessor>();
                         
             services.AddAuthentication(options => options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
