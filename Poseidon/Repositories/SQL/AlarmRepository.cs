@@ -67,7 +67,6 @@ namespace Poseidon.Repositories.SQL
                 .Include(e => e.Pool)
                 .Where(filter ?? new AlarmFilter())
                 .Where(e => e.Pool.Id == poolId)
-                .OrderBy(e => e.DateTime)
                 .Skip(skip)
                 .Take(rowsPerPage);
         }
