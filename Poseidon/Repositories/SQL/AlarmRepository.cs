@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using Poseidon.Configuration;
 using Poseidon.Filters;
 using Poseidon.Helpers;
@@ -32,8 +33,9 @@ namespace Poseidon.Repositories.SQL
         public int CountByPool(int poolId, IFilter<Alarm> filter)
         {
             return context.Alarms
+                .Include(e => e.Pool)
                 .Where(filter ?? new AlarmFilter())
-                .Where(e => e.Pool.Id.Equals(poolId))
+                .Where(e => e.Pool.Id == poolId)
                 .Count();
         }
 
@@ -59,8 +61,9 @@ namespace Poseidon.Repositories.SQL
             int skip = Math.Max(0, pageNumber - 1) * rowsPerPage;
 
             return context.Alarms
+                .Include(e => e.Pool)
                 .Where(filter ?? new AlarmFilter())
-                .Where(e => e.Pool.Id.Equals(poolId))
+                .Where(e => e.Pool.Id == poolId)
                 .OrderBy(e => e.DateTime)
                 .Skip(skip)
                 .Take(rowsPerPage);

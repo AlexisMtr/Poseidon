@@ -8,7 +8,10 @@ namespace Poseidon.Configuration.MapperProfiles
     {
         public AlarmProfile()
         {
-            CreateMap<AlarmProfile, AlarmDto>();
+            CreateMap<Alarm, AlarmDto>()
+                .ForMember(d => d.IsAck, opt => opt.MapFrom(s => s.Ack))
+                .ForMember(d => d.OccuredAt, opt => opt.MapFrom(s => s.DateTime))
+                .ForMember(d => d.AlarmType, opt => opt.MapFrom(s => s.AlarmType.ToString()));
             CreateMap<PaginatedElement<Alarm>, PaginatedDto<AlarmDto>>();
         }
     }
