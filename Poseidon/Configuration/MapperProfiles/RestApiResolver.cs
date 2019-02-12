@@ -23,15 +23,6 @@ namespace Poseidon.Configuration.MapperProfiles
             return source.Ack ? null : httpContextAccessor.HttpContext.GetAcknowledgmentAlarmUri(source.Id);
         }
 
-        public string Resolve(IPaginatedResource source, IPaginatedDto destination, string destMember, ResolutionContext context)
-        {
-            string pageNumber = httpContextAccessor.HttpContext.Request.Query
-                .FirstOrDefault(e => string.Compare(e.Key, "pageNumber", true) == 0).Value;
-            if (string.IsNullOrEmpty(pageNumber)) pageNumber = "1";
-
-            return httpContextAccessor.HttpContext.GetNextPageUrl(int.Parse(pageNumber) < source.PageCount);
-        }
-
         public string Resolve(IPaginatedResource source, IPaginatedDto destination, string sourceMember, string destMember, ResolutionContext context)
         {
             string pageNumber = httpContextAccessor.HttpContext.Request.Query
@@ -40,11 +31,11 @@ namespace Poseidon.Configuration.MapperProfiles
 
             string url = null;
 
-            if (sourceMember.Equals(nameof(PaginatedDto<object>.NextPageUrl)))
+            if (sourceMember.Equals(nameof(IPaginatedDto.NextPageUrl)))
             {
                 url = httpContextAccessor.HttpContext.GetNextPageUrl(int.Parse(pageNumber) < source.PageCount);
             }
-            else if (sourceMember.Equals(nameof(PaginatedDto<object>.PreviousPageUrl)))
+            else if (sourceMember.Equals(nameof(IPaginatedDto.PreviousPageUrl)))
             {
                 url = httpContextAccessor.HttpContext.GetPreviousPageUrl(int.Parse(pageNumber) > 1);
             }
