@@ -2,7 +2,12 @@
 
 namespace Poseidon.Models
 {
-    public class PaginatedElement<T>
+    public interface IPaginatedResource
+    {
+        int PageCount { get; }
+    }
+
+    public class PaginatedElement<T> : IPaginatedResource
     {
         public int PageCount { get; set; }
         public int TotalElementCount { get; set; }

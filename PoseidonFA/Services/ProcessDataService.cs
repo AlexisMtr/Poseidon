@@ -32,7 +32,7 @@ namespace PoseidonFA.Services
             {
                 log.LogError($"Pool with Id {poolId} not found");
                 throw new Exception($"Pool not found");
-            };
+            }
 
             IEnumerable<Telemetry> telemetries = Mapper.Map<IEnumerable<Telemetry>>(data.Telemetries);
             foreach(Telemetry telemetry in telemetries)
@@ -55,8 +55,8 @@ namespace PoseidonFA.Services
                     alarmType = AlarmType.WaterLevel;
                     break;
                 case TelemetryType.Battery:
-                    minValue = 0;
-                    maxValue = batteryLevelAlarm;
+                    minValue = batteryLevelAlarm;
+                    maxValue = 100;
                     alarmType = AlarmType.BatteryLow;
                     break;
                 case TelemetryType.Ph:
@@ -85,6 +85,7 @@ namespace PoseidonFA.Services
 
         private void CheckForAlarm(Pool pool, Telemetry telemetry, double minValue, double maxValue, AlarmType type)
         {
+            // Check if the telemetry value is under respectable values
             if (telemetry.Value is double value && value.IsBetween(minValue, maxValue, false)) return;
 
             alarmService.Add(new Alarm

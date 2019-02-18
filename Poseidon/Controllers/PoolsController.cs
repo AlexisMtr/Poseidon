@@ -45,7 +45,7 @@ namespace Poseidon.Controllers
             PaginatedElement<Pool> pools = poolService.Get(filter, rowsPerPage, pageNumber, user);
 
             PaginatedDto<PoolDto> dto = mapper.Map<PaginatedDto<PoolDto>>(pools);
-            dto.NextPageUrl = HttpContext.GetNextPageUrl(pageNumber, rowsPerPage, pageNumber < dto.PageCount);
+            dto.NextPageUrl = HttpContext.GetNextPageUrl(pageNumber < dto.PageCount);
 
             return Ok(dto);
         }
@@ -73,7 +73,7 @@ namespace Poseidon.Controllers
             PaginatedElement<Telemetry> telemetries = telemetryService.GetByPool(id, filter, rowsPerPage, pageNumber);
 
             PaginatedDto<TelemetryDto> dto = mapper.Map<PaginatedDto<TelemetryDto>>(telemetries);
-            dto.NextPageUrl = HttpContext.GetNextPageUrl(pageNumber, rowsPerPage, pageNumber < dto.PageCount);
+            dto.NextPageUrl = HttpContext.GetNextPageUrl(pageNumber < dto.PageCount);
 
             return Ok(dto);
         }
@@ -87,12 +87,14 @@ namespace Poseidon.Controllers
 
         [HttpGet("{id}/alarms")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(PaginatedDto<AlarmDto>))]
-        public IActionResult GetAlarms([FromRoute]int id, [FromQuery]AlarmFilter filter, [FromQuery]int rowsPerPage = 20, [FromQuery]int pageNumber = 1)
+        public async Task<IActionResult> GetAlarms([FromRoute]int id, [FromQuery]AlarmFilter filter, [FromQuery]int rowsPerPage = 20, [FromQuery]int pageNumber = 1)
         {
-            PaginatedElement<Alarm> alarms = alarmService.GetByPool(id, filter, rowsPerPage, pageNumber);
+            string userEmail = User.FindFirst(ClaimTypes.Email).Value;
+            User user = await userManager.FindByEmailAsync(userEmail);
+
+            PaginatedElement<Alarm> alarms = alarmService.GetByPool(id, filter, rowsPerPage, pageNumber, user);
 
             PaginatedDto<AlarmDto> dto = mapper.Map<PaginatedDto<AlarmDto>>(alarms);
-            dto.NextPageUrl = HttpContext.GetNextPageUrl(pageNumber, rowsPerPage, pageNumber < dto.PageCount);
 
             return Ok(dto);
         }

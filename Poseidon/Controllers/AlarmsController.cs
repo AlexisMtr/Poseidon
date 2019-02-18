@@ -27,7 +27,7 @@ namespace Poseidon.Controllers
         }
 
         [HttpPut("{id}/ack")]
-        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(AlarmDto))]
         public async Task<IActionResult> Ack(int id)
         {
             string userEmail = User.FindFirst(ClaimTypes.Email).Value;
