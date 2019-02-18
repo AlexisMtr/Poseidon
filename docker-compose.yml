@@ -18,14 +18,19 @@ services:
     build: ./PoseidonFA
     image: poseidon-function
     environment:
+      - "AzureFunctionsJobHost__Logging__Console__IsEnabled=true"
+      - "AzureWebJobsSecretStorageType='blob'"
       - "BatteryLevelAlarm=20"
       - "ConnectionStrings:DefaultConnection=Server=tcp:database,1433;Initial Catalog=Poseidon;Integrated Security=False;Connect Timeout=300;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;User ID=SA;Password=YourStrong!Passw0rd"
+      - "AzureWebJobsStorage=AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;DefaultEndpointsProtocol=http;BlobEndpoint=http://host.docker.internal:10000/devstoreaccount1;QueueEndpoint=http://host.docker.internal:10001/devstoreaccount1;TableEndpoint=http://host.docker.internal:10002/devstoreaccount1;"
+      - "AzureWebJobsDashboard=AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;DefaultEndpointsProtocol=http;BlobEndpoint=http://host.docker.internal:10000/devstoreaccount1;QueueEndpoint=http://host.docker.internal:10001/devstoreaccount1;TableEndpoint=http://host.docker.internal:10002/devstoreaccount1;"
     ports:
       - "8082:80"
     networks: 
       - function-net
     depends_on:
       - database
+      # - storage-emulator
 
   database:
     image: mcr.microsoft.com/mssql/server:2017-latest
@@ -40,9 +45,21 @@ services:
     volumes:
       - "db-data:/var/opt/mssql"
 
+  # storage-emulator:
+  #   image: arafato/azurite
+  #   ports:
+  #     - "10000:10000"
+  #     - "10001:10001"
+  #     - "10002:10002"
+  #   networks: 
+  #     - function-net
+  #   volumes:
+  #     - "function-data:/var/opt/mssql"
+
 networks:
   api-net:
   function-net:
 
 volumes:
   db-data:
+  function-data:

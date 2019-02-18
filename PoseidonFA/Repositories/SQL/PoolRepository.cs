@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using PoseidonFA.Configuration;
 using PoseidonFA.Models;
 
@@ -15,7 +16,16 @@ namespace PoseidonFA.Repositories.SQL
 
         public Pool Get(int id)
         {
-            return context.Pools.FirstOrDefault(e => e.Id.Equals(id));
+            return context.Pools
+                .Include(e => e.Device.Configuration)
+                .FirstOrDefault(e => e.Id.Equals(id));
+        }
+
+        public Pool GetByDevice(string deviceId)
+        {
+            return context.Pools
+                .Include(e => e.Device.Configuration)
+                .FirstOrDefault(e => e.Device.DeviceId.Equals(deviceId));
         }
     }
 }

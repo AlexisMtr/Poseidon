@@ -8,6 +8,6 @@ RUN dotnet build -c Release -o /app
 FROM build AS publish
 RUN dotnet publish -c Release -o /app
 
-FROM microsoft/azure-functions-dotnet-core2.0:2.0 as final
+FROM mcr.microsoft.com/azure-functions/dotnet:2.0 as final
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot
 COPY --from=publish /app /home/site/wwwroot

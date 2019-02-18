@@ -5,5 +5,6 @@ namespace PoseidonFA.Repositories
     public interface IPoolRepository
     {
         Pool Get(int id);
+        Pool GetByDevice(string deviceId);
     }
 }

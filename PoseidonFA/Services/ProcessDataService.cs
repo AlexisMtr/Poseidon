@@ -25,12 +25,12 @@ namespace PoseidonFA.Services
             this.batteryLevelAlarm = double.Parse(Environment.GetEnvironmentVariable("BatteryLevelAlarm"));
         }
 
-        public void Process(int poolId, TelemetriesSetDto data)
+        public void Process(string deviceId, TelemetriesSetDto data)
         {
-            Pool pool = poolService.Get(poolId);
+            Pool pool = poolService.GetByDeviceId(deviceId);
             if (pool == null)
             {
-                log.LogError($"Pool with Id {poolId} not found");
+                log.LogError($"No pool associated to device {deviceId}");
                 throw new Exception($"Pool not found");
             }
 
