@@ -1,0 +1,15 @@
+parameters:
+  buildConfiguration: Debug
+
+steps:
+- task: DotNetCoreCLI@2
+  displayName: Restore
+  inputs:
+    command: restore
+
+- task: DotNetCoreCLI@2
+  condition: succeeded()
+  displayName: Build
+  inputs:
+    command: build
+    arguments: '--configuration ${{ parameters.buildConfiguration }}'

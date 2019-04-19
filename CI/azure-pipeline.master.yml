@@ -1,0 +1,26 @@
+pr: none
+
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-16.04
+
+variables:
+  runTests: False
+  buildConfiguration: Release
+
+steps:
+- template: 'Templates/azure-pipeline.tests.yml'
+  parameters:
+    buildConfiguration: $(buildConfiguration)
+    runTests: $(runTests)
+
+- task: CopyFiles@2
+  displayName: Copy DevOps files
+  inputs:
+    Contents: PoseidonRG/*.json
+    TargetFolder: $(System.ArtifactStagingDirectory)/DevOps
+
+- task: PublishBuildArtifacts@1
+  displayName: Publish build

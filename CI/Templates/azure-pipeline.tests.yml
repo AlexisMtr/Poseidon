@@ -1,0 +1,33 @@
+parameters:
+  buildConfiguration: Debug
+  runTests: False
+  thresholdPourcentage: 80
+  thresholdType: line
+  thresholdStat: total
+
+steps:
+- template: 'azure-pipeline.build.yml'
+  parameters:
+    buildConfiguration: ${{ parameters.buildConfiguration }}
+
+- task: DotNetCoreCLI@2
+  condition: and(succeeded(), ${{ parameters.runTests }})
+  displayName: Test
+  inputs:
+    command: test
+    projects: '**/*Tests/*.csproj'
+    arguments: |
+      /p:CollectCoverage=true
+      /p:CoverletOutputFormat=cobertura
+      /p:CoverletOutput=$(System.DefaultWorkingDirectory)/CodeCoverage/
+      /p:Threshold=${{ parameters.thresholdPourcentage }}
+      /p:ThresholdType=${{ parameters.thresholdType }}
+      /p:ThresholdStat=${{ parameters.thresholdStat }}
+    publishTestResults: true
+
+- task: PublishCodeCoverageResults@1
+  displayName: Publish Code Coverage
+  inputs:
+    codeCoverageTool: Cobertura
+    failIfCoverageEmpty: true
+    summaryFileLocation: $(System.DefaultWorkingDirectory)/CodeCoverage/coverage.cobertura.xml
