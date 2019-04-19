@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.15
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.156
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Poseidon", "Poseidon\Poseidon.csproj", "{838ABF1C-A9A9-436A-AF25-5ED216097AA5}"
 EndProject
@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		azuredeploy.json = azuredeploy.json
 		docker-compose.yml = docker-compose.yml
+		readme.md = readme.md
 	EndProjectSection
 EndProject
 Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "PoseidonRG", "PoseidonRG\PoseidonRG.deployproj", "{3CB66D19-A331-4DC8-A5A1-786E04D9D9F1}"
