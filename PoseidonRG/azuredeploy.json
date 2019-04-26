@@ -10,6 +10,35 @@
       "type": "string",
       "defaultValue": "poseidon-appservice-plan"
     },
+    "device-endpoint-name": {
+      "type": "string",
+      "defaultValue": "poseidon-device"
+    },
+    "device-endpoint-service-plan-name": {
+      "type": "string",
+      "defaultValue": "poseidon-device-service-plan"
+    },
+    "device-battery-alarm-level": {
+      "type": "int",
+      "defaultValue": 20,
+      "minValue": 0,
+      "maxValue": 100,
+      "metadata": {
+        "description": "Minimum pourcentage of battery before send alarms"
+      }
+    },
+    "storage-account-name": {
+      "type": "string",
+      "defaultValue": "poseidonstorageaccount"
+    },
+    "storage-acccount-type": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [ "Standard_LRS", "Standard_GRS", "Standard_RAGRS" ],
+      "metadata": {
+        "description": "Storage Account type"
+      }
+    },
     "database-server-name": {
       "type": "string",
       "defaultValue": "poseidon-sql-srv"
@@ -35,7 +64,8 @@
     }
   },
   "variables": {
-    "sql-connection-string": "[concat('Server=tcp:', parameters('database-server-name'), '.database.windows.net,1443;Initial Catalog=', parameters('database-name'), ';Persist Security Info=False;User ID=', parameters('database-user'), ';Password=', parameters('database-pwd'), ';MultipleActiveResultSets=', parameters('database-enable-mars'), ';Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]"
+    "sql-connection-string": "[concat('Server=tcp:', parameters('database-server-name'), '.database.windows.net,1443;Initial Catalog=', parameters('database-name'), ';Persist Security Info=False;User ID=', parameters('database-user'), ';Password=', parameters('database-pwd'), ';MultipleActiveResultSets=', parameters('database-enable-mars'), ';Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]",
+    "storageaccount-connection-string": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storage-account-name'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storage-account-name')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value)]"
   },
   "resources": [
     {
@@ -46,6 +76,26 @@
         "sku": "Free"
       },
       "type": "Microsoft.Web/serverfarms"
+    },
+    {
+      "comments": "Consumption service plan",
+      "name": "[parameters('device-endpoint-service-plan-name')]",
+      "apiVersion": "2015-04-01",
+      "type": "Microsoft.Web/serverfarms",
+      "properties": {
+        "computeMode": "Dynamic",
+        "sku": "Dynamic"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[parameters('storage-account-name')]",
+      "apiVersion": "2016-12-01",
+      "location": "[resourceGroup().location]",
+      "kind": "Storage",
+      "sku": {
+        "name": "[parameters('storage-acccount-type')]"
+      }
     },
     {
       "apiVersion": "2014-04-01",
@@ -96,6 +146,44 @@
         "[concat('Microsoft.Sql/servers/', parameters('database-server-name'))]",
         "[concat('Microsoft.Web/serverfarms/', parameters('web-api-service-plan-name'))]"
       ]
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "location": "[resourceGroup().location]",
+      "name": "[parameters('device-endpoint-name')]",
+      "kind": "functionapp",
+      "dependsOn": [
+        "[concat('Microsoft.Sql/servers/', parameters('database-server-name'))]",
+        "[concat('Microsoft.Web/serverfarms/', parameters('device-endpoint-service-plan-name'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('storage-account-name'))]"
+      ],
+      "properties": {
+        "appSettings": [
+          {
+            "name": "BatteryLevelAlarm",
+            "value": "[parameters('device-battery-alarm-level')]"
+          },
+          {
+            "name": "FUNCTIONS_WORKER_RUNTIME",
+            "value": "dotnet"
+          },
+          {
+            "name": "AzureWebJobsStorage",
+            "value": "[variables('storageaccount-connection-string')]"
+          },
+          {
+            "name": "AzureWebJobsDashboard",
+            "value": "[variables('storageaccount-connection-string')]"
+          }
+        ],
+        "connectionStrings": [
+          {
+            "name": "DefaultConnection",
+            "type": "SQLAzure",
+            "connectionString": "[variables('sql-connection-string')]"
+          }
+        ]
+      }
     }
   ]
 }
