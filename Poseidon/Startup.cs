@@ -16,6 +16,10 @@ using Microsoft.AspNetCore.Identity;
 using AutoMapper;
 using Poseidon.Configuration.MapperProfiles;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNet.OData.Extensions;
+using Microsoft.AspNet.OData.Formatter;
+using Microsoft.Net.Http.Headers;
+using System.Linq;
 
 namespace Poseidon
 {
@@ -88,10 +92,23 @@ namespace Poseidon
                     }
                 });
                 c.OperationFilter<AuthorizationHeaderParameterOperationFilter>();
+                c.DocumentFilter<ODataSwaggerDocument>();
             });
-            
+
+            services.AddOData();
             services.AddCors();
-            services.AddMvc();
+            //services.AddMvc();
+            services.AddMvc(options =>
+            {
+                foreach (var outputFormatter in options.OutputFormatters.OfType<ODataOutputFormatter>().Where(_ => _.SupportedMediaTypes.Count == 0))
+                {
+                    outputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/prs.odatatestxx-odata"));
+                }
+                foreach (var inputFormatter in options.InputFormatters.OfType<ODataInputFormatter>().Where(_ => _.SupportedMediaTypes.Count == 0))
+                {
+                    inputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/prs.odatatestxx-odata"));
+                }
+            });
             services.AddAutoMapper(config =>
             {
                 config.AddProfile<PoolProfile>();
@@ -123,7 +140,11 @@ namespace Poseidon
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Poseidon V1");
             });
 
-            app.UseMvc();
+            app.UseMvc(opt =>
+            {
+                opt.EnableDependencyInjection();
+                opt.Count().Select().OrderBy().MaxTop(10).Expand().Filter();
+            });
         }
     }
 }

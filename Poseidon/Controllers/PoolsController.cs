@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Microsoft.AspNet.OData;
+using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +11,7 @@ using Poseidon.Helpers;
 using Poseidon.Models;
 using Poseidon.Services;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -48,6 +51,43 @@ namespace Poseidon.Controllers
             dto.NextPageUrl = HttpContext.GetNextPageUrl(pageNumber < dto.PageCount);
 
             return Ok(dto);
+        }
+
+        [HttpGet("odata")]
+        [EnableQuery]
+        [AllowAnonymous]
+        public Task<IActionResult> GetOData()
+        {
+            var pools = new List<Pool>();
+            for (int i = 0; i < 10; i++)
+            {
+                pools.Add(new Pool
+                {
+                    Name = $"pool{i}",
+                    Id = i
+                });
+            }
+
+            return Task.FromResult((IActionResult)Ok(pools.AsQueryable()));
+        }
+
+        [HttpGet("odata2")]
+        [AllowAnonymous]
+        //[EnableQuery]
+        public Task<IActionResult> GetOData(ODataQueryOptions<Pool> queryOption)
+        {
+            var pools = new List<Pool>();
+            for (int i = 0; i < 10; i++)
+            {
+                pools.Add(new Pool
+                {
+                    Name = $"pool{i}",
+                    Id = i
+                });
+            }
+
+            var result = queryOption.ApplyTo(pools.AsQueryable());
+            return Task.FromResult((IActionResult)Ok(result));
         }
 
         [HttpGet("{id}")]
