@@ -3,6 +3,7 @@ using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -11,136 +12,67 @@ namespace Poseidon.Configuration
 {
     public class ODataSwaggerDocument : IDocumentFilter
     {
+
+        private readonly Func<MethodInfo, bool> isODataQueryEnabledFunc = method => method.IsPublic && (method.GetCustomAttribute<EnableQueryAttribute>() != null || method.GetParameters().Any(p => p.ParameterType.BaseType == typeof(ODataQueryOptions)));
+
+        private readonly List<IParameter> oDataQueryParameters = new List<IParameter>
+        {
+            new QueryParameter { In = "query", Name = "$expand", Description = string.Empty, Required = false, Type = "string" },
+            new QueryParameter { In = "query", Name = "$filter", Description = string.Empty, Required = false, Type = "string" },
+            new QueryParameter { In = "query", Name = "$select", Description = string.Empty, Required = false, Type = "string" },
+            new QueryParameter { In = "query", Name = "$orderby", Description = string.Empty, Required = false, Type = "string" },
+            new QueryParameter { In = "query", Name = "$top", Description = string.Empty, Required = false, Type = "string" },
+            new QueryParameter { In = "query", Name = "$skip", Description = string.Empty, Required = false, Type = "string" }
+        };
+
+        private IEnumerable<Type> GetODataController()
+        {
+            return Assembly.GetExecutingAssembly().GetTypes()
+                .Where(e => e.IsPublic && (e.BaseType == typeof(Controller) || e.BaseType == typeof(ODataController)))
+                .Where(e => e.GetMethods().Any(isODataQueryEnabledFunc));
+        }
+
+        private bool IsGetMethod(MethodInfo methodInfo) => methodInfo.GetCustomAttribute<HttpGetAttribute>() != null;
+        private bool IsODataQueryParameter(ParameterInfo parameterInfo) => parameterInfo.ParameterType.BaseType == typeof(ODataQueryOptions);
+
+
         public void Apply(SwaggerDocument swaggerDoc, DocumentFilterContext context)
         {
-            Assembly assembly = typeof(ODataController).Assembly;
-            var thisAssemblyTypes = Assembly.GetExecutingAssembly().GetTypes().ToList();
-            var odatacontrollers = thisAssemblyTypes.Where(t => t.BaseType == typeof(Controller)).ToList();
-            var odatamethods = new List<KeyValuePair<HttpMethodType, string>>
+            IEnumerable<Type> oDataControllers = GetODataController();
+            foreach (Type controller in oDataControllers)
             {
-                new KeyValuePair<HttpMethodType, string>( HttpMethodType.Get,"HttpGetAttribute"),
-                new KeyValuePair<HttpMethodType, string>( HttpMethodType.Post,"HttpPostAttribute"),
-                new KeyValuePair<HttpMethodType, string>( HttpMethodType.Put,"HttpPutAttribute"),
-                new KeyValuePair<HttpMethodType, string>( HttpMethodType.Patch,"HttpPatchAttribute")
-            };
+                string controllerName = controller.Name.Replace("Controller", string.Empty);
+                string controllerPath = controller.GetCustomAttribute<RouteAttribute>().Template.Replace("[controller]", controllerName);
 
-            foreach (var odataContoller in odatacontrollers)  // this the OData controllers in the API
-            {
-                var methods = odataContoller.GetMethods().Where(a => a.IsPublic && a.GetCustomAttributes<EnableQueryAttribute>().Any() || a.GetParameters().Any(e => e.ParameterType.BaseType == typeof(ODataQueryOptions))).ToList();
-                if (!methods.Any())
-                    continue; // next controller
-                var odataPathItem = new PathItem();
-                var controllerName = odataContoller.Name.Replace("Controller", "");
-                var path = "/" + "odata" + "/" + controllerName;// + sb.ToString();
-                string baseControllerPath = odataContoller.GetCustomAttribute<RouteAttribute>().Template;
-                foreach (MethodInfo method in methods)  // this is all of the methods in controller (e.g. GET, POST, PUT, etc)
+                IEnumerable<MethodInfo> oDataEnabledMethod = controller.GetMethods().Where(isODataQueryEnabledFunc);
+                if (!oDataEnabledMethod.Any()) continue;
+
+                foreach (MethodInfo method in oDataEnabledMethod)
                 {
-                    var methodType = odatamethods.FirstOrDefault(x => method.CustomAttributes.Any(n => n.AttributeType.Name == x.Value)).Key;
-                    var pathOperation = method.GetCustomAttributes<HttpGetAttribute>().FirstOrDefault()?.Template;
-                    var parameterInfo = method.GetParameters();
-                    var operation = new Operation();
-                    List<IParameter> parameterList = new List<IParameter>();
-                    if (methodType == HttpMethodType.Get)
+                    if (!IsGetMethod(method)) continue;
+
+                    string operationPath = method.GetCustomAttribute<HttpGetAttribute>().Template;
+
+                    Operation operation = swaggerDoc.Paths[$"/{controllerPath}/{operationPath}"].Get;
+                    if (operation.Parameters == null) operation.Parameters = new List<IParameter>();
+
+                    foreach (IParameter parameter in oDataQueryParameters)
                     {
-                        parameterList.Add(new QueryParameter { In = "query", Name = "$expand", Description = "Expands related entities inline.", Required = false });
-                        parameterList.Add(new QueryParameter { In = "query", Name = "$filter", Description = "Filters the results, based on a Boolean condition.", Required = false });
-                        parameterList.Add(new QueryParameter { In = "query", Name = "$select", Description = "Selects which properties to include in the response.", Required = false });
-                        parameterList.Add(new QueryParameter { In = "query", Name = "$orderby", Description = "Sorts the results.", Required = false });
-                        parameterList.Add(new QueryParameter { In = "query", Name = "$top", Description = "Returns only the first n results.", Required = false });
-                        parameterList.Add(new QueryParameter { In = "query", Name = "$skip", Description = "Skips the first n results.", Required = false });
-
-                        var getOperation = swaggerDoc.Paths[$"/{baseControllerPath.Replace("[controller]", controllerName)}/{pathOperation}"].Get;
-                        if (getOperation.Parameters == null) getOperation.Parameters = new List<IParameter>();
-
-                        if (parameterInfo.Any(e => e.ParameterType.BaseType == typeof(ODataQueryOptions)))
-                        {
-                            var parameterName = parameterInfo.FirstOrDefault(e => e.ParameterType.BaseType == typeof(ODataQueryOptions)).Name;
-                            IParameter item;
-                            if ((item = getOperation.Parameters.FirstOrDefault(e => e.Name.Equals(parameterName, System.StringComparison.InvariantCultureIgnoreCase))) != null)
-                            {
-                                getOperation.Parameters.Remove(item);
-                            }
-                        }
-                        
-                        foreach (var param in parameterList)
-                        {
-                            getOperation.Parameters.Add(param);
-                        }
+                        operation.Parameters.Add(parameter);
                     }
-                    foreach (ParameterInfo pi in parameterInfo)
-                    {
-                        if (pi.ParameterType.BaseType == typeof(ODataQueryOptions))
-                        {
-                            continue;
-                        };
 
-                        var schema = new Schema { Ref = $"#/definitions/{pi.ParameterType.Name}", Type = pi.ParameterType.ToString() };
-                        parameterList.Add(new BodyParameter { Schema = schema, Name = pi.ParameterType.Name });
-                        if (!swaggerDoc.Definitions.ContainsKey(pi.ParameterType.Name))
+                    if (method.GetParameters().Any(e => IsODataQueryParameter(e)))
+                    {
+                        IEnumerable<ParameterInfo> parameters = method.GetParameters().Where(e => IsODataQueryParameter(e));
+                        IParameter removeParameter;
+                        foreach (ParameterInfo parameter in parameters)
                         {
-                            context.SchemaRegistry.GetOrRegister(pi.ParameterType);
+                            removeParameter = operation.Parameters.FirstOrDefault(e => e.Name.Equals(parameter.Name, StringComparison.InvariantCultureIgnoreCase));
+                            operation.Parameters.Remove(removeParameter);
                         }
-                    }
-                    operation.Parameters = parameterList;
-                    // The odata methods will be listed under a heading called OData in the swagger doc
-                    operation.Tags = new List<string> { controllerName };
-                    operation.OperationId = "OData_" + controllerName + methodType.ToString();
-
-                    // This hard-coded for now, set it to use XML comments if you want
-                    operation.Summary = "Summary about method / data";
-                    operation.Description = "Description / options for the call.";
-
-                    operation.Consumes = new List<string>();
-                    operation.Produces = new List<string> { "application/json", "application/atom+xml", "text/json", "application/xml", "text/xml" };
-                    operation.Deprecated = false;
-
-                    var response = new Response() { Description = method.ReturnType.Name };
-                    response.Schema = new Schema { Type = "array", Items = context.SchemaRegistry.GetOrRegister(method.ReturnType) };
-                    operation.Responses = new Dictionary<string, Response> { { "200", response } };
-
-                    var security = GetSecurityForOperation(odataContoller);
-                    if (security != null)
-                        operation.Security = new List<IDictionary<string, IEnumerable<string>>> { security };
-                    switch (methodType)
-                    {
-                        case HttpMethodType.Get:
-                            {
-                                odataPathItem.Get = operation;
-                            }
-                            break;
-
-                        case HttpMethodType.Patch:
-                            odataPathItem.Patch = operation;
-                            break;
-
-                        case HttpMethodType.Post:
-                            odataPathItem.Post = operation;
-                            break;
-
-                        case HttpMethodType.Put:
-                            odataPathItem.Put = operation;
-                            break;
                     }
                 }
             }
-        }
-
-        private enum HttpMethodType
-        {
-            Get,
-            Post,
-            Patch,
-            Put
-        }
-
-        private Dictionary<string, IEnumerable<string>> GetSecurityForOperation(MemberInfo odataContoller)
-        {
-            Dictionary<string, IEnumerable<string>> securityEntries = null;
-            if (odataContoller.GetCustomAttribute(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute)) != null)
-            {
-                securityEntries = new Dictionary<string, IEnumerable<string>> { { "oauth2", new[] { "actioncenter" } } };
-            }
-            return securityEntries;
         }
     }
 
@@ -149,6 +81,7 @@ namespace Poseidon.Configuration
         public string Name { get; set; }
         public string In { get; set; }
         public string Description { get; set; }
+        public string Type { get; set; }
         public bool Required { get; set; }
 
         public Dictionary<string, object> Extensions => null;

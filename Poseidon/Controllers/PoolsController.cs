@@ -56,6 +56,7 @@ namespace Poseidon.Controllers
         [HttpGet("odata")]
         [EnableQuery]
         [AllowAnonymous]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(IEnumerable<Pool>))]
         public Task<IActionResult> GetOData()
         {
             var pools = new List<Pool>();
