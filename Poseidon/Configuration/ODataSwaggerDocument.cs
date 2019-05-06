@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNet.OData;
+using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -26,7 +26,7 @@ namespace Poseidon.Configuration
 
             foreach (var odataContoller in odatacontrollers)  // this the OData controllers in the API
             {
-                var methods = odataContoller.GetMethods().Where(a => a.IsPublic && a.GetCustomAttributes<EnableQueryAttribute>().Any()).ToList();
+                var methods = odataContoller.GetMethods().Where(a => a.IsPublic && a.GetCustomAttributes<EnableQueryAttribute>().Any() || a.GetParameters().Any(e => e.ParameterType.BaseType == typeof(ODataQueryOptions))).ToList();
                 if (!methods.Any())
                     continue; // next controller
                 var odataPathItem = new PathItem();
@@ -49,15 +49,31 @@ namespace Poseidon.Configuration
                         parameterList.Add(new QueryParameter { In = "query", Name = "$top", Description = "Returns only the first n results.", Required = false });
                         parameterList.Add(new QueryParameter { In = "query", Name = "$skip", Description = "Skips the first n results.", Required = false });
 
+                        var getOperation = swaggerDoc.Paths[$"/{baseControllerPath.Replace("[controller]", controllerName)}/{pathOperation}"].Get;
+                        if (getOperation.Parameters == null) getOperation.Parameters = new List<IParameter>();
+
+                        if (parameterInfo.Any(e => e.ParameterType.BaseType == typeof(ODataQueryOptions)))
+                        {
+                            var parameterName = parameterInfo.FirstOrDefault(e => e.ParameterType.BaseType == typeof(ODataQueryOptions)).Name;
+                            IParameter item;
+                            if ((item = getOperation.Parameters.FirstOrDefault(e => e.Name.Equals(parameterName, System.StringComparison.InvariantCultureIgnoreCase))) != null)
+                            {
+                                getOperation.Parameters.Remove(item);
+                            }
+                        }
+                        
                         foreach (var param in parameterList)
                         {
-                            var getOperation = swaggerDoc.Paths[$"/{baseControllerPath.Replace("[controller]", controllerName)}/{pathOperation}"].Get;
-                            if (getOperation.Parameters == null) getOperation.Parameters = new List<IParameter>();
                             getOperation.Parameters.Add(param);
                         }
                     }
                     foreach (ParameterInfo pi in parameterInfo)
                     {
+                        if (pi.ParameterType.BaseType == typeof(ODataQueryOptions))
+                        {
+                            continue;
+                        };
+
                         var schema = new Schema { Ref = $"#/definitions/{pi.ParameterType.Name}", Type = pi.ParameterType.ToString() };
                         parameterList.Add(new BodyParameter { Schema = schema, Name = pi.ParameterType.Name });
                         if (!swaggerDoc.Definitions.ContainsKey(pi.ParameterType.Name))
