@@ -15,6 +15,7 @@ using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Poseidon.Helpers;
 
 namespace Poseidon.Controllers
 {
@@ -87,7 +88,8 @@ namespace Poseidon.Controllers
                 });
             }
 
-            var result = queryOption.ApplyTo(pools.AsQueryable());
+            //var result = queryOption.ApplyTo(pools.AsQueryable());
+            var result = pools.AsQueryable().Where(queryOption).Select(queryOption);
             return Task.FromResult((IActionResult)Ok(result));
         }
 

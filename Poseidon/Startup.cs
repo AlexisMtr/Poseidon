@@ -20,6 +20,7 @@ using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Formatter;
 using Microsoft.Net.Http.Headers;
 using System.Linq;
+using Microsoft.Extensions.Logging.Console;
 
 namespace Poseidon
 {
@@ -36,6 +37,8 @@ namespace Poseidon
 
             Configuration = builder.Build();
         }
+        public static readonly LoggerFactory MyLoggerFactory
+    = new LoggerFactory(new[] { new ConsoleLoggerProvider((_, __) => true, true) });
 
         public IConfigurationRoot Configuration { get; }
 
@@ -44,7 +47,7 @@ namespace Poseidon
         {
             services.Configure<IssuerSigningKeySettings>(Configuration.GetSection("IssuerSigningKey"));
 
-            services.AddDbContext<PoseidonContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<PoseidonContext>(opt => opt.UseLoggerFactory(MyLoggerFactory).UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddIdentity<User, IdentityRole>()
                 .AddEntityFrameworkStores<PoseidonContext>();
             
