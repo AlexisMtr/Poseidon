@@ -1,0 +1,38 @@
+resources:
+  containers:
+  - container: AgentContainer
+    image: ubuntu:16.04
+    env:
+    - "ConnectionStrings:DefaultConnection": "Server=tcp:database,1433;Initial Catalog=Poseidon;Integrated Security=False;Connect Timeout=300;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;User ID=SA;Password=YourStrong!Passw0rd"
+  - container: SQLServer
+    image: mcr.microsoft.com/mssql/server:2017-latest
+    ports:
+    - 1433:1433
+  - container: Azurite
+    image: arafato/azurite
+    ports:
+    - 10000:10000
+    - 10001:10001
+    - 10002:10002
+
+pool:
+  vmImage: 'ubuntu-16.04'
+
+container: AgentContainer
+services:
+  database: SQLServer
+  azstorage: Azurite
+
+steps:
+- task: DotNetCoreCLI@2
+  displayName: Restore
+  inputs:
+    command: restore
+    projects: '**/*.sln'
+
+- task: DotNetCoreCLI@2
+  displayName: Integration Tests
+  inputs:
+    command: test
+    projects: '**/IntegrationTests/*.csproj'
+    publishTestResults: true

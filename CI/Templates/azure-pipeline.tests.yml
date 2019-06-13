@@ -16,13 +16,7 @@ steps:
   inputs:
     command: test
     projects: '**/*Tests/*.csproj'
-    arguments: |
-      /p:CollectCoverage=true
-      /p:CoverletOutputFormat=cobertura
-      /p:CoverletOutput=$(System.DefaultWorkingDirectory)/CodeCoverage/
-      /p:Threshold=${{ parameters.thresholdPourcentage }}
-      /p:ThresholdType=${{ parameters.thresholdType }}
-      /p:ThresholdStat=${{ parameters.thresholdStat }}
+    arguments: '/p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=$(System.DefaultWorkingDirectory)/CodeCoverage/ /p:Threshold=${{ parameters.thresholdPourcentage }} /p:ThresholdType=${{ parameters.thresholdType }} /p:ThresholdStat=${{ parameters.thresholdStat }}'
     publishTestResults: true
 
 - task: PublishCodeCoverageResults@1
