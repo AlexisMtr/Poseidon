@@ -131,7 +131,11 @@ namespace Poseidon.Controllers
             User user = await userManager.FindByEmailAsync(userEmail);
 
             poolService.Associate(poolId, deviceId, user);
-            return Ok();
+            return Ok(new
+            {
+                poolId,
+                deviceId
+            });
         }
 
         [HttpDelete("{poolId}/association")]
@@ -142,7 +146,10 @@ namespace Poseidon.Controllers
             User user = await userManager.FindByEmailAsync(userEmail);
 
             poolService.Dissociate(poolId, user);
-            return Ok();
+            return Ok(new
+            {
+                message = $"no device associated to pool {poolId}"
+            });
         }
     }
 }

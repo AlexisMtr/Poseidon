@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace PoseidonFA.Services
 {
@@ -27,6 +28,8 @@ namespace PoseidonFA.Services
 
         public void Process(string deviceId, TelemetriesSetDto data)
         {
+            if (!data.Telemetries.Any()) return;
+
             Pool pool = poolService.GetByDeviceId(deviceId);
             if (pool == null)
             {

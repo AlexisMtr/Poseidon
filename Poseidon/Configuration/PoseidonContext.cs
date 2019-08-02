@@ -28,9 +28,9 @@ namespace Poseidon.Configuration
                 .HasConversion((e) => e.Ticks, e => TimeSpan.FromTicks(e));
 
             builder.Entity<IdentityRole>().HasData(
-                new IdentityRole { Name = Models.Roles.SysAdmin },
-                new IdentityRole { Name = Models.Roles.Administrator },
-                new IdentityRole { Name = Models.Roles.User }
+                new IdentityRole { Name = Models.Roles.SysAdmin, NormalizedName = Models.Roles.SysAdmin },
+                new IdentityRole { Name = Models.Roles.Administrator, NormalizedName = Models.Roles.Administrator },
+                new IdentityRole { Name = Models.Roles.User, NormalizedName = Models.Roles.User }
             );
             
             base.OnModelCreating(builder);

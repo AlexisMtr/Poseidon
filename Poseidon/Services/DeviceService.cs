@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using AutoMapper;
 using Poseidon.Dtos;
 using Poseidon.Exceptions;
@@ -19,6 +22,11 @@ namespace Poseidon.Services
             this.deviceRepository = deviceRepository;
             this.mapper = mapper;
             this.defaultVersion = "0";
+        }
+
+        public IEnumerable<Device> Get(IFilter<Device> filter)
+        {
+            return deviceRepository.Get(filter).AsEnumerable();
         }
 
         public Device Get(string id, User user = null)

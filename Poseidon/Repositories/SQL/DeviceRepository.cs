@@ -1,4 +1,5 @@
-﻿using Poseidon.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Poseidon.Configuration;
 using Poseidon.Filters;
 using Poseidon.Helpers;
 using Poseidon.Models;
@@ -22,7 +23,8 @@ namespace Poseidon.Repositories.SQL
 
         public int Count(IFilter<Device> filter)
         {
-            return context.Devices.Count(filter ?? new DeviceFilter());
+            return context.Devices
+                .Count(filter ?? new DeviceFilter());
         }
 
         public void Delete(Device entity)
@@ -40,6 +42,7 @@ namespace Poseidon.Repositories.SQL
         {
             return context.Devices
                 .Where(filter ?? new DeviceFilter())
+                .Include(e => e.Configuration)
                 .FirstOrDefault(e => e.DeviceId.Equals(id));
         }
 

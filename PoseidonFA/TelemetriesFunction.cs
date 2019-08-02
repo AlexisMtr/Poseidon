@@ -4,6 +4,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using PoseidonFA.Configuration;
 using PoseidonFA.Dtos;
@@ -24,8 +25,8 @@ namespace PoseidonFA
             string deviceId,
             ILogger log)
         {
-            ProcessDataService service = null;
-            DeviceConfigurationService deviceConfigurationService = null;
+            ProcessDataService service;
+            DeviceConfigurationService deviceConfigurationService;
             try
             {
                 MapperConfiguration.ConfigureMapper();
@@ -40,7 +41,11 @@ namespace PoseidonFA
                 return new StatusCodeResult((int)HttpStatusCode.InternalServerError);
             }
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            string requestBody = string.Empty;
+            using (var sr = new StreamReader(req.Body))
+            {
+                requestBody = await sr.ReadToEndAsync();
+            }
             TelemetriesSetDto payload = JsonConvert.DeserializeObject<TelemetriesSetDto>(requestBody);
 
             try
@@ -48,7 +53,7 @@ namespace PoseidonFA
                 service.Process(deviceId, payload);
                 DeviceConfiguration configuration = deviceConfigurationService.GetDeviceConfiguration(deviceId);
 
-                IActionResult result  = configuration.IsPublished ? 
+                IActionResult result  = configuration.IsPublished && !req.Query.ContainsKey("getConfiguration") ? 
                     new StatusCodeResult((int)HttpStatusCode.NotModified) as IActionResult :
                     new OkObjectResult(new { configuration.PublicationDelay }) as IActionResult;
 
