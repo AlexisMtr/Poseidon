@@ -55,7 +55,7 @@ namespace PoseidonFA
 
                 IActionResult result  = configuration.IsPublished && !req.Query.ContainsKey("getConfiguration") ? 
                     new StatusCodeResult((int)HttpStatusCode.NotModified) as IActionResult :
-                    new OkObjectResult(new { configuration.PublicationDelay }) as IActionResult;
+                    new OkObjectResult(new { publicationDelay = configuration.PublicationDelay.TotalSeconds }) as IActionResult;
 
                 if(!deviceConfigurationService.SetAsPublished(configuration))
                 {
