@@ -80,8 +80,8 @@
     {
       "comments": "Consumption service plan",
       "name": "[parameters('device-endpoint-service-plan-name')]",
-      "apiVersion": "2015-04-01",
       "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2016-09-01",
       "properties": {
         "computeMode": "Dynamic",
         "sku": "Dynamic"
@@ -90,7 +90,7 @@
     {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[parameters('storage-account-name')]",
-      "apiVersion": "2016-12-01",
+      "apiVersion": "2018-02-01",
       "location": "[resourceGroup().location]",
       "kind": "Storage",
       "sku": {
@@ -152,6 +152,7 @@
       "location": "[resourceGroup().location]",
       "name": "[parameters('device-endpoint-name')]",
       "kind": "functionapp",
+      "apiVersion": "2018-11-01",
       "dependsOn": [
         "[concat('Microsoft.Sql/servers/', parameters('database-server-name'))]",
         "[concat('Microsoft.Web/serverfarms/', parameters('device-endpoint-service-plan-name'))]",
