@@ -2,6 +2,15 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "env": {
+      "type": "string",
+      "defaultValue": "dev",
+      "allowedValues": [
+        "dev",
+        "qa",
+        "prod"
+      ]
+    },
     "web-api-name": {
       "type": "string",
       "defaultValue": "poseidon-api"
@@ -64,6 +73,13 @@
     }
   },
   "variables": {
+    "database-server-resource-name": "[concat(parameters('env'), '-', parameters('database-server-name'))]",
+    "database-resource-name": "[concat(parameters('env'), '-', parameters('database-name'))]",
+    "storage-account-resource-name": "[concat(parameters('env'), parameters('storage-account-name'))]",
+    "device-service-resource-name": "[concat(parameters('env'), '-', parameters('device-endpoint-name'))]",
+    "device-service-plan-resource-name": "[concat(parameters('env'), '-', parameters('device-endpoint-service-plan-name'))]",
+    "web-api-resource-name": "[concat(parameters('env'), '-', parameters('web-api-name'))]",
+    "web-api-service-plan-resource-name": "[concat(parameters('env'), '-', parameters('web-api-service-plan-name'))]",
     "sql-connection-string": "[concat('Server=tcp:', parameters('database-server-name'), '.database.windows.net,1443;Initial Catalog=', parameters('database-name'), ';Persist Security Info=False;User ID=', parameters('database-user'), ';Password=', parameters('database-pwd'), ';MultipleActiveResultSets=', parameters('database-enable-mars'), ';Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]",
     "storageaccount-connection-string": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storage-account-name'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storage-account-name')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value)]"
   },
@@ -71,7 +87,7 @@
     {
       "apiVersion": "2016-09-01",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('web-api-service-plan-name')]",
+      "name": "[variables('web-api-service-plan-resource-name')]",
       "properties": {
         "sku": "Free"
       },
@@ -79,7 +95,7 @@
     },
     {
       "comments": "Consumption service plan",
-      "name": "[parameters('device-endpoint-service-plan-name')]",
+      "name": "[variables('device-service-plan-resource-name')]",
       "type": "Microsoft.Web/serverfarms",
       "apiVersion": "2016-09-01",
       "properties": {
@@ -89,7 +105,7 @@
     },
     {
       "type": "Microsoft.Storage/storageAccounts",
-      "name": "[parameters('storage-account-name')]",
+      "name": "[variables('storage-account-resource-name')]",
       "apiVersion": "2018-02-01",
       "location": "[resourceGroup().location]",
       "kind": "Storage",
@@ -100,7 +116,7 @@
     {
       "apiVersion": "2014-04-01",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('database-server-name')]",
+      "name": "[variables('database-server-resource-name')]",
       "properties": {
         "administratorLogin": "[parameters('database-user')]",
         "administratorLoginPassword": "[parameters('database-pwd')]",
@@ -110,13 +126,13 @@
         {
           "apiVersion": "2014-04-01",
           "location": "[resourceGroup().location]",
-          "name": "[parameters('database-name')]",
+          "name": "[variables('database-resource-name')]",
           "properties": {
             "edition": "Free"
           },
           "type": "databases",
           "dependsOn": [
-            "[concat('Microsoft.Sql/servers/', parameters('database-server-name'))]"
+            "[resourceId('Microsoft.Sql/servers', variables('database-server-resource-name'))]"
           ]
         }
       ],
@@ -125,7 +141,7 @@
     {
       "apiVersion": "2016-08-01",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('web-api-name')]",
+      "name": "[variables('web-api-resource-name')]",
       "type": "Microsoft.Web/sites",
       "properties": {
         "appSettings": [
@@ -143,20 +159,20 @@
         ]
       },
       "dependsOn": [
-        "[concat('Microsoft.Sql/servers/', parameters('database-server-name'))]",
-        "[concat('Microsoft.Web/serverfarms/', parameters('web-api-service-plan-name'))]"
+        "[resourceId('Microsoft.Sql/servers', variables('database-server-resource-name'))]",
+        "[resourceId('Microsoft.Web/serverfarms', variables('web-api-service-plan-resource-name'))]"
       ]
     },
     {
       "type": "Microsoft.Web/sites",
       "location": "[resourceGroup().location]",
-      "name": "[parameters('device-endpoint-name')]",
+      "name": "[variables('device-service-resource-name')]",
       "kind": "functionapp",
       "apiVersion": "2018-11-01",
       "dependsOn": [
-        "[concat('Microsoft.Sql/servers/', parameters('database-server-name'))]",
-        "[concat('Microsoft.Web/serverfarms/', parameters('device-endpoint-service-plan-name'))]",
-        "[concat('Microsoft.Storage/storageAccounts/', parameters('storage-account-name'))]"
+        "[resourceId('Microsoft.Sql/servers', variables('database-server-resource-name'))]",
+        "[resourceId('Microsoft.Web/serverfarms', variables('device-service-plan-resource-name'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storage-account-resource-name'))]"
       ],
       "properties": {
         "appSettings": [
